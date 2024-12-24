@@ -1,0 +1,30 @@
+/* Estilos para Trustpilot Reviews */
+.ctr-reviews {
+    font-family: Arial, sans-serif;
+    margin: 20px 0;
+}
+
+.ctr-reviews h2 {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.ctr-review {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.ctr-review p {
+    margin: 0 0 10px;
+    color: #555;
+}
+
+.ctr-review strong {
+    color: #333;
+    font-weight: bold;
+}
