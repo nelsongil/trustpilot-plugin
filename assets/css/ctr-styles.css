@@ -1,0 +1,167 @@
+.ctr-reviews-container {
+    max-width: var(--ctr-max-width, 800px);
+    margin: 2em auto;
+    position: relative; /* Para posicionar los botones */
+}
+
+.ctr-reviews-container.carousel {
+    padding: 0 60px; /* Aumentar aún más el espacio para los botones */
+}
+
+.ctr-reviews-container.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--ctr-spacing, 20px);
+}
+
+.ctr-reviews-container.list .ctr-review {
+    margin-bottom: var(--ctr-spacing, 20px);
+}
+
+.ctr-main-title {
+    text-align: center;
+    margin-bottom: 20px;
+    color: var(--ctr-text-color, #333333);
+}
+
+.ctr-buttons {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.ctr-button {
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 0 10px;
+    background-color: var(--ctr-button-color, #00b67a);
+    color: var(--ctr-button-text-color, #ffffff);
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.ctr-button:hover {
+    background-color: var(--ctr-button-hover-color, #009966);
+}
+
+.ctr-review {
+    background: var(--ctr-background-color, #ffffff);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin: 0; /* Asegurar que no haya márgenes que corten la sombra */
+    box-sizing: border-box; /* Asegurar que padding y border se incluyan en el ancho/alto */
+    width: 100%; /* Asegurar que la reseña ocupe el 100% del contenedor del carrusel */
+    height: auto; /* Permitir que la altura se ajuste al contenido */
+    min-height: 150px; /* Altura mínima para reseñas cortas */
+    overflow: hidden; /* Asegurar que el contenido no se desborde de la tarjeta */
+}
+
+.ctr-rating {
+    margin-bottom: 10px;
+}
+
+.ctr-star {
+    color: #ddd;
+    font-size: 20px;
+}
+
+.ctr-star.filled {
+    color: var(--ctr-star-color, #00b67a);
+}
+
+.ctr-title {
+    margin: 0 0 10px;
+    font-size: 18px;
+    color: var(--ctr-text-color, #333333);
+}
+
+.ctr-content {
+    margin-bottom: 15px;
+    line-height: 1.6;
+    color: var(--ctr-text-color, #333333);
+    word-break: break-word; /* Forzar que las palabras largas se rompan */
+    overflow-wrap: break-word; /* Para navegadores modernos */
+    white-space: normal; /* Asegurar que el texto envuelva */
+    padding: 15px; /* Añadir padding interno al contenido */
+    width: 100%; /* Asegurar que ocupe el 100% del ancho disponible */
+    box-sizing: border-box; /* Crucial para que el padding no añada ancho extra */
+}
+
+.ctr-meta {
+    font-size: 14px;
+    color: var(--ctr-meta-text-color, #888888);
+}
+
+.ctr-author {
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.ctr-date:before {
+    content: "•";
+    margin: 0 5px;
+}
+
+.ctr-error,
+.ctr-no-reviews {
+    padding: 15px;
+    background: #fff3f3;
+    border: 1px solid #ffcdd2;
+    border-radius: 4px;
+    color: #d32f2f;
+    text-align: center;
+}
+
+/* Carrusel Específico CSS */
+.ctr-reviews-container.carousel .ctr-carousel-inner {
+    display: flex;
+    position: relative;
+    /* padding: 0 10px; -- Eliminado para evitar doble padding */
+    overflow: hidden; /* Mantener hidden para el carrusel */
+}
+
+.ctr-reviews-container.carousel .ctr-review {
+    min-width: 100%;
+    width: 100% !important; /* Forzar el ancho completo */
+    box-sizing: border-box;
+    transition: transform 0.5s ease-in-out;
+    flex-shrink: 0;
+    display: none; /* Ocultar por defecto, JS mostrará el activo */
+    padding: 20px; /* Asegurar padding interno */
+    margin: 0; /* Asegurar que no haya márgenes que corten la sombra */
+    height: auto; /* Permitir que la altura se ajuste al contenido */
+    min-height: 150px; /* Altura mínima para reseñas cortas */
+    overflow-y: auto; /* Permitir scroll vertical si el contenido es muy largo */
+    overflow-x: hidden; /* Ocultar scroll horizontal */
+}
+
+.ctr-carousel-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: var(--ctr-button-color, rgba(0, 0, 0, 0.5));
+    color: var(--ctr-button-text-color, white);
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    z-index: 10;
+    font-size: 24px;
+    border-radius: 50%;
+    line-height: 1;
+    opacity: 0.9; /* Ligeramente más opaco */
+    transition: background-color 0.3s, opacity 0.3s;
+}
+
+.ctr-carousel-button:hover {
+    background-color: var(--ctr-button-hover-color, rgba(0, 0, 0, 0.7));
+    opacity: 1;
+}
+
+.ctr-carousel-button.ctr-prev {
+    left: 20px; /* Ajustado para estar más al borde */
+}
+
+.ctr-carousel-button.ctr-next {
+    right: 20px; /* Ajustado para estar más al borde */
+} 

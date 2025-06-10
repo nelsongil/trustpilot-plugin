@@ -1,0 +1,12 @@
+.ctr-carousel {
+    text-align: center;
+    margin: 20px auto;
+}
+.ctr-slide {
+    padding: 15px;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
