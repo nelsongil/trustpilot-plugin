@@ -1,13 +1,13 @@
 <?php
 /**
  * Plugin Name: Custom Trustpilot Reviews
- * Plugin URI: https://github.com/yourusername/custom-trustpilot-reviews
+ * Plugin URI: https://github.com/nelsongil/trustpilot-plugin
  * Description: Muestra las valoraciones de Trustpilot en WordPress y Divi con un diseño personalizable.
- * Version: 1.5
+ * Version: 2.0
  * Requires at least: 5.6
  * Requires PHP: 8.0
  * Author: Nelson Gil
- * Author URI: https://github.com/yourusername
+ * Author URI: https://github.com/nelsongil
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: custom-trustpilot-reviews
@@ -28,6 +28,12 @@ require_once CTR_PLUGIN_DIR . 'includes/api.php';
 require_once CTR_PLUGIN_DIR . 'includes/shortcode.php';
 require_once CTR_PLUGIN_DIR . 'includes/divi-module.php';
 require_once CTR_PLUGIN_DIR . 'includes/admin-options.php';
+require_once CTR_PLUGIN_DIR . 'includes/github-updater.php';
+
+// Inicializar el actualizador de GitHub
+if ( is_admin() ) {
+    new CTR_GitHub_Updater( __FILE__, 'nelsongil', 'trustpilot-plugin' );
+}
 
 // Registrar activación y desactivación
 register_activation_hook(__FILE__, 'ctr_activate');
@@ -402,3 +408,11 @@ function ctr_uninstall() {
     delete_transient('ctr_reviews_cache');
 }
 register_uninstall_hook(__FILE__, 'ctr_uninstall');
+
+// Registrar el módulo de Divi
+function ctr_register_divi_module() {
+    if (class_exists('ET_Builder_Module')) {
+        include_once plugin_dir_path(__FILE__) . 'includes/divi-module.php';
+    }
+}
+add_action('et_builder_ready', 'ctr_register_divi_module');

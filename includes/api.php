@@ -2,6 +2,7 @@
 if (!defined('ABSPATH')) exit;
 
 /**
+<<<<<<< HEAD
  * Función para validar la URL de Trustpilot
  */
 function ctr_validate_trustpilot_url($url) {
@@ -60,18 +61,41 @@ function ctr_get_trustpilot_reviews($url_param, $count_param, $cache_duration_pa
     if ($response_code !== 200) {
         error_log('Error Trustpilot Reviews: Código de respuesta ' . $response_code);
         return ['error' => __('Error al obtener las reseñas. Por favor, verifica la URL.', 'custom-trustpilot-reviews')];
+=======
+ * Función para obtener reseñas de Trustpilot desde una página pública
+ */
+function ctr_get_trustpilot_reviews() {
+    $url = esc_url_raw(get_option('ctr_api_url', ''));
+
+    // Validar si la URL está configurada
+    if (empty($url) || !filter_var($url, FILTER_VALIDATE_URL)) {
+        return ['error' => 'La URL de Trustpilot no es válida.'];
+    }
+
+    // Hacer la solicitud HTTP
+    $response = wp_remote_get($url, ['timeout' => 10]);
+
+    // Verificar errores en la solicitud
+    if (is_wp_error($response)) {
+        return ['error' => 'No se pudo conectar a Trustpilot.'];
+>>>>>>> 53026be42e90a9c49a795f2faf46160b26a22258
     }
 
     // Obtener el HTML de la respuesta
     $html = wp_remote_retrieve_body($response);
     if (empty($html)) {
+<<<<<<< HEAD
         return ['error' => __('No se encontraron reseñas.', 'custom-trustpilot-reviews')];
+=======
+        return ['error' => 'La respuesta está vacía.'];
+>>>>>>> 53026be42e90a9c49a795f2faf46160b26a22258
     }
 
     // Parsear el HTML con DOMDocument
     $reviews = [];
     libxml_use_internal_errors(true);
     $dom = new DOMDocument();
+<<<<<<< HEAD
     
     try {
         $dom->loadHTML($html, LIBXML_NOERROR | LIBXML_NOWARNING);
@@ -80,10 +104,14 @@ function ctr_get_trustpilot_reviews($url_param, $count_param, $cache_duration_pa
         return ['error' => __('Error al procesar las reseñas.', 'custom-trustpilot-reviews')];
     }
     
+=======
+    @$dom->loadHTML($html); // La @ suprime errores de HTML malformado
+>>>>>>> 53026be42e90a9c49a795f2faf46160b26a22258
     libxml_clear_errors();
 
     $xpath = new DOMXPath($dom);
 
+<<<<<<< HEAD
     // Buscar las tarjetas de reseñas
     $review_cards = $xpath->query('//article[contains(@class, "review")]');
 
@@ -112,10 +140,24 @@ function ctr_get_trustpilot_reviews($url_param, $count_param, $cache_duration_pa
         // Extraer nombre del cliente
         $name_node = $xpath->query('.//div[contains(@class, "consumer-name")]', $card);
         $name = ($name_node->length > 0) ? sanitize_text_field(trim($name_node->item(0)->textContent)) : __('Cliente Anónimo', 'custom-trustpilot-reviews');
+=======
+    // Buscar las tarjetas de reseñas de forma general
+    $review_cards = $xpath->query('//article');
+
+    foreach ($review_cards as $card) {
+        // Extraer título de la reseña
+        $title_node = $xpath->query('.//h2', $card);
+        $title = ($title_node->length > 0) ? sanitize_text_field(trim($title_node->item(0)->textContent)) : 'Título no disponible';
+
+        // Extraer contenido de la reseña
+        $content_node = $xpath->query('.//div[contains(@class, "reviewContent")]', $card);
+        $content = ($content_node->length > 0) ? sanitize_text_field(trim($content_node->item(0)->textContent)) : 'Reseña no disponible';
+>>>>>>> 53026be42e90a9c49a795f2faf46160b26a22258
 
         // Validar y añadir reseña
         if (!empty($title) || !empty($content)) {
             $reviews[] = [
+<<<<<<< HEAD
                 'title' => $title,
                 'content' => $content,
                 'rating' => $rating,
@@ -123,10 +165,16 @@ function ctr_get_trustpilot_reviews($url_param, $count_param, $cache_duration_pa
                 'consumer' => [
                     'displayName' => $name
                 ]
+=======
+                'title'   => $title,
+                'content' => $content,
+                'consumer' => ['displayName' => 'Cliente Anónimo']
+>>>>>>> 53026be42e90a9c49a795f2faf46160b26a22258
             ];
         }
     }
 
+<<<<<<< HEAD
     // Limitar el número de reseñas si se especifica
     if ($count !== null && is_numeric($count)) {
         $reviews = array_slice($reviews, 0, intval($count));
@@ -137,3 +185,7 @@ function ctr_get_trustpilot_reviews($url_param, $count_param, $cache_duration_pa
 
     return $reviews;
 }
+=======
+    return $reviews;
+}
+>>>>>>> 53026be42e90a9c49a795f2faf46160b26a22258
