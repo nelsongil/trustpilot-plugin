@@ -33,6 +33,16 @@ function ctr_settings_page() {
         $enable_animations = isset($_POST['ctr_enable_animations']) ? 1 : 0;
         $enable_hover_effects = isset($_POST['ctr_enable_hover_effects']) ? 1 : 0;
         
+        // Performance settings
+        $enable_lazy_loading = isset($_POST['ctr_enable_lazy_loading']) ? 1 : 0;
+        $enable_minification = isset($_POST['ctr_enable_minification']) ? 1 : 0;
+        $enable_cdn = isset($_POST['ctr_enable_cdn']) ? 1 : 0;
+        $cdn_url = esc_url_raw($_POST['ctr_cdn_url']);
+        
+        // Update system settings
+        $auto_update_enabled = isset($_POST['ctr_auto_update_enabled']) ? 1 : 0;
+        $update_channel = sanitize_text_field($_POST['ctr_update_channel']);
+        
         // Validate reviews count
         if ($reviews_count < 1 || $reviews_count > 50) {
             $reviews_count = 5;
@@ -71,6 +81,16 @@ function ctr_settings_page() {
         update_option('ctr_enable_animations', $enable_animations);
         update_option('ctr_enable_hover_effects', $enable_hover_effects);
         
+        // Performance options
+        update_option('ctr_enable_lazy_loading', $enable_lazy_loading);
+        update_option('ctr_enable_minification', $enable_minification);
+        update_option('ctr_enable_cdn', $enable_cdn);
+        update_option('ctr_cdn_url', $cdn_url);
+        
+        // Update system options
+        update_option('ctr_auto_update_enabled', $auto_update_enabled);
+        update_option('ctr_update_channel', $update_channel);
+        
         // Clear cache if cache settings changed
         if ($enable_cache) {
             delete_transient('ctr_reviews_cache');
@@ -102,9 +122,39 @@ function ctr_settings_page() {
     $enable_animations = get_option('ctr_enable_animations', 1);
     $enable_hover_effects = get_option('ctr_enable_hover_effects', 1);
     
+    // Performance options
+    $enable_lazy_loading = get_option('ctr_enable_lazy_loading', 1);
+    $enable_minification = get_option('ctr_enable_minification', 0);
+    $enable_cdn = get_option('ctr_enable_cdn', 0);
+    $cdn_url = get_option('ctr_cdn_url', '');
+    
+    // Update system options
+    $auto_update_enabled = get_option('ctr_auto_update_enabled', 1);
+    $update_channel = get_option('ctr_update_channel', 'stable');
+    
+    // Get update information
+    $update_info = ctr_get_update_info();
+    
     ?>
     <div class="wrap">
         <h1><?php _e('Configuración de Trustpilot Reviews', 'custom-trustpilot-reviews'); ?></h1>
+        
+        <!-- Update Notification -->
+        <?php if ($update_info['has_update']): ?>
+            <div class="notice notice-info is-dismissible">
+                <p>
+                    <strong><?php _e('¡Nueva versión disponible!', 'custom-trustpilot-reviews'); ?></strong>
+                    <?php printf(
+                        __('Versión actual: %s | Nueva versión: %s', 'custom-trustpilot-reviews'),
+                        esc_html($update_info['current_version']),
+                        esc_html($update_info['new_version'])
+                    ); ?>
+                    <a href="<?php echo esc_url($update_info['update_url']); ?>" class="button button-primary" style="margin-left: 10px;">
+                        <?php _e('Actualizar ahora', 'custom-trustpilot-reviews'); ?>
+                    </a>
+                </p>
+            </div>
+        <?php endif; ?>
         
         <form method="POST">
             <?php wp_nonce_field('ctr_settings_nonce', 'ctr_nonce'); ?>
@@ -113,6 +163,8 @@ function ctr_settings_page() {
                 <a href="#general" class="nav-tab nav-tab-active"><?php _e('General', 'custom-trustpilot-reviews'); ?></a>
                 <a href="#display" class="nav-tab"><?php _e('Visualización', 'custom-trustpilot-reviews'); ?></a>
                 <a href="#style" class="nav-tab"><?php _e('Estilos', 'custom-trustpilot-reviews'); ?></a>
+                <a href="#performance" class="nav-tab"><?php _e('Rendimiento', 'custom-trustpilot-reviews'); ?></a>
+                <a href="#updates" class="nav-tab"><?php _e('Actualizaciones', 'custom-trustpilot-reviews'); ?></a>
                 <a href="#advanced" class="nav-tab"><?php _e('Avanzado', 'custom-trustpilot-reviews'); ?></a>
             </h2>
             
@@ -345,6 +397,156 @@ function ctr_settings_page() {
                 </table>
             </div>
             
+            <!-- Performance Settings Tab -->
+            <div id="performance" class="tab-content" style="display: none;">
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">
+                            <label for="ctr_enable_lazy_loading"><?php _e('Lazy Loading:', 'custom-trustpilot-reviews'); ?></label>
+                        </th>
+                        <td>
+                            <label>
+                                <input type="checkbox" 
+                                       id="ctr_enable_lazy_loading"
+                                       name="ctr_enable_lazy_loading" 
+                                       value="1" 
+                                       <?php checked($enable_lazy_loading, 1); ?>>
+                                <?php _e('Habilitar carga diferida de reseñas', 'custom-trustpilot-reviews'); ?>
+                            </label>
+                            <p class="description">
+                                <?php _e('Mejora el rendimiento cargando las reseñas solo cuando son visibles.', 'custom-trustpilot-reviews'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <label for="ctr_enable_minification"><?php _e('Minificación CSS:', 'custom-trustpilot-reviews'); ?></label>
+                        </th>
+                        <td>
+                            <label>
+                                <input type="checkbox" 
+                                       id="ctr_enable_minification"
+                                       name="ctr_enable_minification" 
+                                       value="1" 
+                                       <?php checked($enable_minification, 0); ?>>
+                                <?php _e('Habilitar minificación de CSS', 'custom-trustpilot-reviews'); ?>
+                            </label>
+                            <p class="description">
+                                <?php _e('Reduce el tamaño de los archivos CSS para mejorar la velocidad de carga.', 'custom-trustpilot-reviews'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <label for="ctr_enable_cdn"><?php _e('CDN:', 'custom-trustpilot-reviews'); ?></label>
+                        </th>
+                        <td>
+                            <label>
+                                <input type="checkbox" 
+                                       id="ctr_enable_cdn"
+                                       name="ctr_enable_cdn" 
+                                       value="1" 
+                                       <?php checked($enable_cdn, 0); ?>>
+                                <?php _e('Habilitar CDN para assets', 'custom-trustpilot-reviews'); ?>
+                            </label>
+                            <p class="description">
+                                <?php _e('Sirve los archivos estáticos desde una CDN para mejorar la velocidad.', 'custom-trustpilot-reviews'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <label for="ctr_cdn_url"><?php _e('URL del CDN:', 'custom-trustpilot-reviews'); ?></label>
+                        </th>
+                        <td>
+                            <input type="url" 
+                                   id="ctr_cdn_url"
+                                   name="ctr_cdn_url" 
+                                   value="<?php echo esc_attr($cdn_url); ?>" 
+                                   class="regular-text"
+                                   placeholder="https://cdn.example.com">
+                            <p class="description">
+                                <?php _e('URL base de tu CDN (ej: https://cdn.example.com).', 'custom-trustpilot-reviews'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            
+            <!-- Updates Settings Tab -->
+            <div id="updates" class="tab-content" style="display: none;">
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">
+                            <label for="ctr_auto_update_enabled"><?php _e('Actualizaciones automáticas:', 'custom-trustpilot-reviews'); ?></label>
+                        </th>
+                        <td>
+                            <label>
+                                <input type="checkbox" 
+                                       id="ctr_auto_update_enabled"
+                                       name="ctr_auto_update_enabled" 
+                                       value="1" 
+                                       <?php checked($auto_update_enabled, 1); ?>>
+                                <?php _e('Habilitar verificación automática de actualizaciones', 'custom-trustpilot-reviews'); ?>
+                            </label>
+                            <p class="description">
+                                <?php _e('El plugin verificará automáticamente si hay nuevas versiones disponibles.', 'custom-trustpilot-reviews'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <label for="ctr_update_channel"><?php _e('Canal de actualizaciones:', 'custom-trustpilot-reviews'); ?></label>
+                        </th>
+                        <td>
+                            <select id="ctr_update_channel" name="ctr_update_channel">
+                                <option value="stable" <?php selected($update_channel, 'stable'); ?>><?php _e('Estable (Recomendado)', 'custom-trustpilot-reviews'); ?></option>
+                                <option value="beta" <?php selected($update_channel, 'beta'); ?>><?php _e('Beta (Para desarrolladores)', 'custom-trustpilot-reviews'); ?></option>
+                            </select>
+                            <p class="description">
+                                <?php _e('Canal de actualizaciones que quieres seguir.', 'custom-trustpilot-reviews'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row"><?php _e('Estado actual:', 'custom-trustpilot-reviews'); ?></th>
+                        <td>
+                            <p>
+                                <strong><?php _e('Versión actual:', 'custom-trustpilot-reviews'); ?></strong> 
+                                <?php echo esc_html(CTR_PLUGIN_VERSION); ?>
+                            </p>
+                            
+                            <?php if ($update_info['has_update']): ?>
+                                <p style="color: #0073e6;">
+                                    <strong><?php _e('Nueva versión disponible:', 'custom-trustpilot-reviews'); ?></strong> 
+                                    <?php echo esc_html($update_info['new_version']); ?>
+                                </p>
+                                <p>
+                                    <a href="<?php echo esc_url($update_info['update_url']); ?>" class="button button-primary">
+                                        <?php _e('Actualizar ahora', 'custom-trustpilot-reviews'); ?>
+                                    </a>
+                                </p>
+                            <?php else: ?>
+                                <p style="color: #28a745;">
+                                    <strong><?php _e('Estás usando la versión más reciente.', 'custom-trustpilot-reviews'); ?></strong>
+                                </p>
+                            <?php endif; ?>
+                            
+                            <p>
+                                <button type="button" id="ctr_check_updates" class="button button-secondary">
+                                    <?php _e('Verificar actualizaciones ahora', 'custom-trustpilot-reviews'); ?>
+                                </button>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            
             <!-- Advanced Settings Tab -->
             <div id="advanced" class="tab-content" style="display: none;">
                 <table class="form-table">
@@ -392,6 +594,10 @@ function ctr_settings_page() {
                 <?php if ($enable_cache): ?>
                     <button type="button" id="ctr_clear_cache" class="button button-secondary" style="margin-left: 10px;">
                         <?php _e('Limpiar caché', 'custom-trustpilot-reviews'); ?>
+                    </button>
+                    
+                    <button type="button" id="ctr_warm_cache" class="button button-secondary" style="margin-left: 10px;">
+                        <?php _e('Calentar caché', 'custom-trustpilot-reviews'); ?>
                     </button>
                 <?php endif; ?>
             </p>
@@ -456,6 +662,41 @@ function ctr_settings_page() {
                         }
                     });
                 }
+            });
+            
+            // Cache warming
+            $('#ctr_warm_cache').on('click', function() {
+                if (confirm('<?php _e('¿Quieres calentar el caché para mejorar el rendimiento?', 'custom-trustpilot-reviews'); ?>')) {
+                    $.post(ajaxurl, {
+                        action: 'ctr_warm_cache',
+                        nonce: '<?php echo wp_create_nonce('ctr_warm_cache_nonce'); ?>'
+                    }, function(response) {
+                        if (response.success) {
+                            alert('<?php _e('Caché calentado correctamente.', 'custom-trustpilot-reviews'); ?>');
+                        } else {
+                            alert('<?php _e('Error al calentar el caché.', 'custom-trustpilot-reviews'); ?>');
+                        }
+                    });
+                }
+            });
+            
+            // Check for updates
+            $('#ctr_check_updates').on('click', function() {
+                var $button = $(this);
+                $button.prop('disabled', true).text('<?php _e('Verificando...', 'custom-trustpilot-reviews'); ?>');
+                
+                $.post(ajaxurl, {
+                    action: 'ctr_check_updates',
+                    nonce: '<?php echo wp_create_nonce('ctr_update_check_nonce'); ?>'
+                }, function(response) {
+                    if (response.success) {
+                        alert('<?php _e('Verificación completada. Recarga la página para ver si hay actualizaciones.', 'custom-trustpilot-reviews'); ?>');
+                        location.reload();
+                    } else {
+                        alert('<?php _e('Error al verificar actualizaciones.', 'custom-trustpilot-reviews'); ?>');
+                    }
+                    $button.prop('disabled', false).text('<?php _e('Verificar actualizaciones ahora', 'custom-trustpilot-reviews'); ?>');
+                });
             });
         });
         </script>

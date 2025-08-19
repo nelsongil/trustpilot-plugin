@@ -2,78 +2,130 @@
 if (!defined('ABSPATH')) exit;
 
 /**
- * Sistema de actualización automática para Trustpilot Reviews
+ * Sistema de actualización estable para Trustpilot Reviews
+ * Versión 2.0 - Completamente reescrito para mayor estabilidad
  */
 class CTR_Plugin_Updater {
     
     private $plugin_slug;
     private $plugin_basename;
+    private $plugin_name;
     private $update_url;
     private $update_check_interval;
+    private $last_check_time;
+    private $is_initialized;
     
     public function __construct() {
         $this->plugin_slug = CTR_PLUGIN_SLUG;
         $this->plugin_basename = CTR_PLUGIN_BASENAME;
+        $this->plugin_name = 'Custom Trustpilot Reviews';
         $this->update_url = 'https://api.github.com/repos/nelsongil/trustpilot-reviews/releases/latest';
-        $this->update_check_interval = 12 * HOUR_IN_SECONDS; // 12 horas
+        $this->update_check_interval = 24 * HOUR_IN_SECONDS; // 24 horas
+        $this->is_initialized = false;
         
+        // Inicializar solo si es seguro
+        add_action('init', array($this, 'safe_init'), 20);
+    }
+    
+    /**
+     * Inicialización segura del sistema de actualización
+     */
+    public function safe_init() {
+        // Verificar que WordPress esté completamente cargado
+        if (!did_action('init') || $this->is_initialized) {
+            return;
+        }
+        
+        // Verificar permisos y capacidades
+        if (!current_user_can('update_plugins')) {
+            return;
+        }
+        
+        // Verificar que no estemos en modo de mantenimiento
+        if (wp_is_maintenance_mode()) {
+            return;
+        }
+        
+        try {
+            $this->init_update_system();
+            $this->is_initialized = true;
+        } catch (Exception $e) {
+            // Log del error pero no fallar
+            error_log('CTR Updater Error: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Inicializar el sistema de actualización
+     */
+    private function init_update_system() {
         // Hooks para el sistema de actualización
         add_filter('pre_set_site_transient_update_plugins', array($this, 'check_for_updates'));
         add_filter('plugins_api', array($this, 'plugin_info'), 10, 3);
         add_filter('upgrader_post_install', array($this, 'post_install'), 10, 3);
-        add_action('admin_init', array($this, 'force_update_check'));
-        add_action('ctr_check_for_updates', array($this, 'scheduled_update_check'));
         
-        // Inicializar verificación de actualizaciones
-        $this->init_update_check();
+        // Verificación manual de actualizaciones
+        add_action('admin_init', array($this, 'admin_update_check'));
+        add_action('wp_ajax_ctr_check_updates', array($this, 'ajax_check_updates'));
+        
+        // Programar verificación automática
+        $this->schedule_update_checks();
     }
     
     /**
-     * Inicializar verificación de actualizaciones
+     * Programar verificaciones de actualización
      */
-    public function init_update_check() {
-        // Verificar si está habilitada la actualización automática
-        if (get_option('ctr_auto_update_enabled', 1)) {
-            // Programar verificación diaria
-            if (!wp_next_scheduled('ctr_check_for_updates')) {
-                wp_schedule_event(time(), 'daily', 'ctr_check_for_updates');
-            }
-            
-            // Verificar actualizaciones en el admin
-            if (is_admin()) {
-                add_action('admin_init', array($this, 'admin_update_check'));
-            }
+    private function schedule_update_checks() {
+        if (!wp_next_scheduled('ctr_daily_update_check')) {
+            wp_schedule_event(time(), 'daily', 'ctr_daily_update_check');
         }
-    }
-    
-    /**
-     * Verificación de actualizaciones desde el admin
-     */
-    public function admin_update_check() {
-        $last_check = get_transient('ctr_last_update_check');
-        
-        if (false === $last_check || (time() - $last_check) > $this->update_check_interval) {
-            $this->check_for_updates();
-            set_transient('ctr_last_update_check', time(), $this->update_check_interval);
-        }
+        add_action('ctr_daily_update_check', array($this, 'scheduled_update_check'));
     }
     
     /**
      * Verificación programada de actualizaciones
      */
     public function scheduled_update_check() {
-        $this->check_for_updates();
+        try {
+            $this->check_for_updates();
+        } catch (Exception $e) {
+            error_log('CTR Scheduled Update Check Error: ' . $e->getMessage());
+        }
     }
     
     /**
-     * Verificación forzada de actualizaciones
+     * Verificación desde el admin
      */
-    public function force_update_check() {
-        if (isset($_GET['ctr_force_update_check']) && current_user_can('update_plugins')) {
-            check_admin_referer('ctr_force_update_check');
-            $this->check_for_updates();
-            wp_redirect(admin_url('admin.php?page=ctr-settings&update_checked=1'));
-            exit;
+    public function admin_update_check() {
+        $this->last_check_time = get_transient('ctr_last_update_check');
+        
+        if (false === $this->last_check_time || 
+            (time() - $this->last_check_time) > $this->update_check_interval) {
+            
+            try {
+                $this->check_for_updates();
+                set_transient('ctr_last_update_check', time(), $this->update_check_interval);
+            } catch (Exception $e) {
+                error_log('CTR Admin Update Check Error: ' . $e->getMessage());
+            }
+        }
+    }
+    
+    /**
+     * Verificación AJAX de actualizaciones
+     */
+    public function ajax_check_updates() {
+        // Verificar nonce y permisos
+        if (!wp_verify_nonce($_POST['nonce'], 'ctr_update_check_nonce') || 
+            !current_user_can('update_plugins')) {
+            wp_die('Unauthorized');
+        }
+        
+        try {
+            $result = $this->check_for_updates();
+            wp_send_json_success($result);
+        } catch (Exception $e) {
+            wp_send_json_error(array('message' => $e->getMessage()));
         }
     }
     
@@ -85,40 +137,40 @@ class CTR_Plugin_Updater {
             $transient = get_site_transient('update_plugins');
         }
         
-        // Obtener información de la última versión
-        $update_info = $this->get_latest_version_info();
+        if (!$transient) {
+            return $transient;
+        }
         
-        if ($update_info && !empty($update_info['version'])) {
-            $current_version = CTR_PLUGIN_VERSION;
-            $new_version = $update_info['version'];
+        try {
+            // Obtener información de la última versión
+            $update_info = $this->get_latest_version_info();
             
-            // Verificar si hay una nueva versión
-            if (version_compare($new_version, $current_version, '>')) {
-                // Preparar objeto de actualización
-                $update_object = new stdClass();
-                $update_object->slug = $this->plugin_slug;
-                $update_object->plugin = $this->plugin_basename;
-                $update_object->new_version = $new_version;
-                $update_object->url = $update_info['url'];
-                $update_object->package = $update_info['download_url'];
-                $update_object->requires = $update_info['requires'] ?? '5.6';
-                $update_object->requires_php = $update_info['requires_php'] ?? '7.4';
-                $update_object->tested = $update_info['tested'] ?? '6.4';
-                $update_object->last_updated = $update_info['published_at'] ?? '';
-                $update_object->sections = array(
-                    'description' => $update_info['description'] ?? '',
-                    'changelog' => $update_info['changelog'] ?? '',
-                    'installation' => $update_info['installation'] ?? ''
-                );
+            if ($update_info && !empty($update_info['version'])) {
+                $current_version = CTR_PLUGIN_VERSION;
+                $new_version = $update_info['version'];
                 
-                $transient->response[$this->plugin_basename] = $update_object;
-                
-                // Guardar información de actualización disponible
-                set_transient('ctr_update_available', $update_info, $this->update_check_interval);
-            } else {
-                // No hay actualizaciones disponibles
-                delete_transient('ctr_update_available');
+                // Verificar si hay una nueva versión
+                if (version_compare($new_version, $current_version, '>')) {
+                    // Verificar compatibilidad antes de mostrar la actualización
+                    $compatibility = $this->check_compatibility($update_info);
+                    
+                    if ($compatibility['compatible']) {
+                        $update_object = $this->prepare_update_object($update_info);
+                        $transient->response[$this->plugin_basename] = $update_object;
+                        
+                        // Guardar información de actualización disponible
+                        set_transient('ctr_update_available', $update_info, $this->update_check_interval);
+                        
+                        // Notificar en el admin
+                        $this->show_update_notification($update_info);
+                    }
+                } else {
+                    // No hay actualizaciones disponibles
+                    delete_transient('ctr_update_available');
+                }
             }
+        } catch (Exception $e) {
+            error_log('CTR Update Check Error: ' . $e->getMessage());
         }
         
         return $transient;
@@ -134,14 +186,8 @@ class CTR_Plugin_Updater {
             return $cached_info;
         }
         
-        // Obtener desde GitHub API
-        $response = wp_remote_get($this->update_url, array(
-            'timeout' => 15,
-            'headers' => array(
-                'Accept' => 'application/vnd.github.v3+json',
-                'User-Agent' => 'WordPress/' . get_bloginfo('version') . '; ' . get_bloginfo('url')
-            )
-        ));
+        // Obtener desde GitHub API con timeout y reintentos
+        $response = $this->make_github_request();
         
         if (is_wp_error($response)) {
             return false;
@@ -162,13 +208,74 @@ class CTR_Plugin_Updater {
             'description' => $data['body'] ?? '',
             'published_at' => $data['published_at'] ?? '',
             'changelog' => $this->parse_changelog($data['body'] ?? ''),
-            'installation' => $this->get_installation_instructions()
+            'installation' => $this->get_installation_instructions(),
+            'requires' => $this->extract_requirements($data['body'] ?? ''),
+            'requires_php' => $this->extract_php_requirement($data['body'] ?? ''),
+            'tested' => $this->extract_tested_version($data['body'] ?? '')
         );
         
-        // Guardar en caché por 12 horas
+        // Guardar en caché por 24 horas
         set_transient('ctr_latest_version_info', $version_info, $this->update_check_interval);
         
         return $version_info;
+    }
+    
+    /**
+     * Realizar petición a GitHub con reintentos
+     */
+    private function make_github_request($retries = 3) {
+        $args = array(
+            'timeout' => 15,
+            'headers' => array(
+                'Accept' => 'application/vnd.github.v3+json',
+                'User-Agent' => 'WordPress/' . get_bloginfo('version') . '; ' . get_bloginfo('url')
+            )
+        );
+        
+        for ($i = 0; $i < $retries; $i++) {
+            $response = wp_remote_get($this->update_url, $args);
+            
+            if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
+                return $response;
+            }
+            
+            // Esperar antes del reintento
+            if ($i < $retries - 1) {
+                sleep(2);
+            }
+        }
+        
+        return new WP_Error('github_request_failed', 'Failed to fetch update information after ' . $retries . ' attempts');
+    }
+    
+    /**
+     * Extraer requisitos del changelog
+     */
+    private function extract_requirements($body) {
+        if (preg_match('/Requires WordPress:\s*([0-9.]+)/i', $body, $matches)) {
+            return $matches[1];
+        }
+        return '5.6';
+    }
+    
+    /**
+     * Extraer requisito de PHP del changelog
+     */
+    private function extract_php_requirement($body) {
+        if (preg_match('/Requires PHP:\s*([0-9.]+)/i', $body, $matches)) {
+            return $matches[1];
+        }
+        return '7.4';
+    }
+    
+    /**
+     * Extraer versión probada del changelog
+     */
+    private function extract_tested_version($body) {
+        if (preg_match('/Tested up to:\s*([0-9.]+)/i', $body, $matches)) {
+            return $matches[1];
+        }
+        return '6.4';
     }
     
     /**
@@ -200,63 +307,32 @@ class CTR_Plugin_Updater {
     }
     
     /**
-     * Información del plugin para la API de WordPress
+     * Preparar objeto de actualización
      */
-    public function plugin_info($false, $action, $response) {
-        if ($action !== 'plugin_information' || $response->slug !== $this->plugin_slug) {
-            return $false;
-        }
-        
-        $update_info = $this->get_latest_version_info();
-        
-        if (!$update_info) {
-            return $false;
-        }
-        
-        $response = new stdClass();
-        $response->slug = $this->plugin_slug;
-        $response->plugin_name = 'Custom Trustpilot Reviews';
-        $response->version = $update_info['version'];
-        $response->author = 'Nelson Ariel Gil Olguin';
-        $response->homepage = 'https://github.com/nelsongil/trustpilot-reviews';
-        $response->requires = $update_info['requires'] ?? '5.6';
-        $response->requires_php = $update_info['requires_php'] ?? '7.4';
-        $response->tested = $update_info['tested'] ?? '6.4';
-        $response->last_updated = $update_info['published_at'] ?? '';
-        $response->sections = array(
+    private function prepare_update_object($update_info) {
+        $update_object = new stdClass();
+        $update_object->slug = $this->plugin_slug;
+        $update_object->plugin = $this->plugin_basename;
+        $update_object->new_version = $update_info['version'];
+        $update_object->url = $update_info['url'];
+        $update_object->package = $update_info['download_url'];
+        $update_object->requires = $update_info['requires'] ?? '5.6';
+        $update_object->requires_php = $update_info['requires_php'] ?? '7.4';
+        $update_object->tested = $update_info['tested'] ?? '6.4';
+        $update_object->last_updated = $update_info['published_at'] ?? '';
+        $update_object->sections = array(
             'description' => $update_info['description'] ?? '',
             'changelog' => $update_info['changelog'] ?? '',
             'installation' => $update_info['installation'] ?? ''
         );
         
-        return $response;
-    }
-    
-    /**
-     * Acciones post-instalación
-     */
-    public function post_install($true, $hook_extra, $result) {
-        if (isset($hook_extra['plugin']) && $hook_extra['plugin'] === $this->plugin_basename) {
-            // Limpiar cachés de actualización
-            delete_transient('ctr_update_available');
-            delete_transient('ctr_latest_version_info');
-            delete_transient('ctr_last_update_check');
-            
-            // Mostrar mensaje de éxito
-            add_action('admin_notices', function() {
-                echo '<div class="notice notice-success is-dismissible">';
-                echo '<p><strong>Trustpilot Reviews:</strong> ' . __('Plugin actualizado correctamente.', 'custom-trustpilot-reviews') . '</p>';
-                echo '</div>';
-            });
-        }
-        
-        return $result;
+        return $update_object;
     }
     
     /**
      * Verificar compatibilidad antes de actualizar
      */
-    public function check_compatibility($version_info) {
+    private function check_compatibility($version_info) {
         $current_wp_version = get_bloginfo('version');
         $current_php_version = PHP_VERSION;
         
@@ -287,6 +363,85 @@ class CTR_Plugin_Updater {
         
         return array('compatible' => true);
     }
+    
+    /**
+     * Mostrar notificación de actualización en el admin
+     */
+    private function show_update_notification($update_info) {
+        add_action('admin_notices', function() use ($update_info) {
+            $current_version = CTR_PLUGIN_VERSION;
+            $new_version = $update_info['version'];
+            
+            echo '<div class="notice notice-info is-dismissible">';
+            echo '<p><strong>' . esc_html($this->plugin_name) . ':</strong> ';
+            printf(
+                __('Hay una nueva versión disponible (%s). <a href="%s">Actualizar ahora</a>', 'custom-trustpilot-reviews'),
+                esc_html($new_version),
+                esc_url(admin_url('plugins.php?action=upgrade-plugin&plugin=' . $this->plugin_basename))
+            );
+            echo '</p>';
+            echo '</div>';
+        });
+    }
+    
+    /**
+     * Información del plugin para la API de WordPress
+     */
+    public function plugin_info($false, $action, $response) {
+        if ($action !== 'plugin_information' || $response->slug !== $this->plugin_slug) {
+            return $false;
+        }
+        
+        try {
+            $update_info = $this->get_latest_version_info();
+            
+            if (!$update_info) {
+                return $false;
+            }
+            
+            $response = new stdClass();
+            $response->slug = $this->plugin_slug;
+            $response->plugin_name = $this->plugin_name;
+            $response->version = $update_info['version'];
+            $response->author = 'Nelson Ariel Gil Olguin';
+            $response->homepage = 'https://github.com/nelsongil/trustpilot-reviews';
+            $response->requires = $update_info['requires'] ?? '5.6';
+            $response->requires_php = $update_info['requires_php'] ?? '7.4';
+            $response->tested = $update_info['tested'] ?? '6.4';
+            $response->last_updated = $update_info['published_at'] ?? '';
+            $response->sections = array(
+                'description' => $update_info['description'] ?? '',
+                'changelog' => $update_info['changelog'] ?? '',
+                'installation' => $update_info['installation'] ?? ''
+            );
+            
+            return $response;
+        } catch (Exception $e) {
+            error_log('CTR Plugin Info Error: ' . $e->getMessage());
+            return $false;
+        }
+    }
+    
+    /**
+     * Acciones post-instalación
+     */
+    public function post_install($true, $hook_extra, $result) {
+        if (isset($hook_extra['plugin']) && $hook_extra['plugin'] === $this->plugin_basename) {
+            // Limpiar cachés de actualización
+            delete_transient('ctr_update_available');
+            delete_transient('ctr_latest_version_info');
+            delete_transient('ctr_last_update_check');
+            
+            // Mostrar mensaje de éxito
+            add_action('admin_notices', function() {
+                echo '<div class="notice notice-success is-dismissible">';
+                echo '<p><strong>' . esc_html($this->plugin_name) . ':</strong> ' . __('Plugin actualizado correctamente.', 'custom-trustpilot-reviews') . '</p>';
+                echo '</div>';
+            });
+        }
+        
+        return $result;
+    }
 }
 
 /**
@@ -294,14 +449,19 @@ class CTR_Plugin_Updater {
  */
 function ctr_check_for_updates_manual() {
     if (current_user_can('update_plugins')) {
-        $updater = new CTR_Plugin_Updater();
-        $updater->check_for_updates();
-        
-        // Limpiar transientes para forzar nueva verificación
-        delete_transient('ctr_latest_version_info');
-        delete_transient('ctr_last_update_check');
-        
-        return true;
+        try {
+            $updater = new CTR_Plugin_Updater();
+            $updater->check_for_updates();
+            
+            // Limpiar transientes para forzar nueva verificación
+            delete_transient('ctr_latest_version_info');
+            delete_transient('ctr_last_update_check');
+            
+            return true;
+        } catch (Exception $e) {
+            error_log('CTR Manual Update Check Error: ' . $e->getMessage());
+            return false;
+        }
     }
     
     return false;
@@ -330,4 +490,15 @@ function ctr_get_update_info() {
     }
     
     return array('has_update' => false);
+}
+
+/**
+ * Función helper para limpiar cachés de actualización
+ */
+function ctr_clear_update_cache() {
+    delete_transient('ctr_update_available');
+    delete_transient('ctr_latest_version_info');
+    delete_transient('ctr_last_update_check');
+    
+    return true;
 }
