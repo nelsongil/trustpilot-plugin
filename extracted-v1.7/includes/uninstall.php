@@ -27,7 +27,6 @@ delete_option('ctr_enable_hover_effects');
 // Eliminar transientes del plugin
 delete_transient('ctr_reviews_cache');
 delete_transient('ctr_last_request_time');
-delete_transient('ctr_request_count');
 
 // Limpiar cualquier caché que pueda haber quedado
 wp_cache_flush();

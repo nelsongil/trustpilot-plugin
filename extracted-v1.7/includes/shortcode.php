@@ -149,51 +149,21 @@ function ctr_render_reviews_carousel($atts = array()) {
     
     <?php if ($layout === 'carousel' && count($reviews) > 1): ?>
         <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Use vanilla JS for better performance when jQuery might not be available
+        jQuery(document).ready(function($) {
             var currentSlide = 0;
             var totalSlides = <?php echo count($reviews); ?>;
             
-            var nextBtn = document.querySelector('.ctr-next');
-            var prevBtn = document.querySelector('.ctr-prev');
+            $('.ctr-next').on('click', function() {
+                $('.ctr-review-slide[data-slide="' + currentSlide + '"]').hide();
+                currentSlide = (currentSlide + 1) % totalSlides;
+                $('.ctr-review-slide[data-slide="' + currentSlide + '"]').show();
+            });
             
-            if (nextBtn) {
-                nextBtn.addEventListener('click', function() {
-                    var currentSlideEl = document.querySelector('.ctr-review-slide[data-slide="' + currentSlide + '"]');
-                    if (currentSlideEl) currentSlideEl.style.display = 'none';
-                    currentSlide = (currentSlide + 1) % totalSlides;
-                    var nextSlideEl = document.querySelector('.ctr-review-slide[data-slide="' + currentSlide + '"]');
-                    if (nextSlideEl) nextSlideEl.style.display = 'block';
-                });
-            }
-            
-            if (prevBtn) {
-                prevBtn.addEventListener('click', function() {
-                    var currentSlideEl = document.querySelector('.ctr-review-slide[data-slide="' + currentSlide + '"]');
-                    if (currentSlideEl) currentSlideEl.style.display = 'none';
-                    currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
-                    var prevSlideEl = document.querySelector('.ctr-review-slide[data-slide="' + currentSlide + '"]');
-                    if (prevSlideEl) prevSlideEl.style.display = 'block';
-                });
-            }
-            
-            // Auto-rotation feature (optional)
-            var autoRotate = setInterval(function() {
-                if (nextBtn) nextBtn.click();
-            }, 8000); // 8 seconds auto-rotation
-            
-            // Pause auto-rotation on hover
-            var carouselContainer = document.querySelector('.ctr-carousel-container');
-            if (carouselContainer) {
-                carouselContainer.addEventListener('mouseenter', function() {
-                    clearInterval(autoRotate);
-                });
-                carouselContainer.addEventListener('mouseleave', function() {
-                    autoRotate = setInterval(function() {
-                        if (nextBtn) nextBtn.click();
-                    }, 8000);
-                });
-            }
+            $('.ctr-prev').on('click', function() {
+                $('.ctr-review-slide[data-slide="' + currentSlide + '"]').hide();
+                currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+                $('.ctr-review-slide[data-slide="' + currentSlide + '"]').show();
+            });
         });
         </script>
     <?php endif; ?>

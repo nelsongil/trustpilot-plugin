@@ -4,7 +4,7 @@ Tags: Trustpilot, reviews, Divi, ratings, carousel, grid, cache, stars, masonry,
 Requires at least: 5.6
 Tested up to: 6.4
 Requires PHP: 7.4
-Stable tag: 1.7.1
+Stable tag: 1.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -73,34 +73,6 @@ Dispones de 5 estilos: Moderno, Clásico, Minimalista, Elegante y Audaz, cada un
 3. assets/img/trustpilotlogo.png - Logo de Trustpilot
 
 == Changelog ==
-= 1.7.1 =
-* 🚀 **OPTIMIZACIONES DE RENDIMIENTO:**
-  - JavaScript mejorado usando vanilla JS en lugar de jQuery para mejor compatibilidad
-  - Auto-rotación del carrusel con pausa al hacer hover
-  - Mejor sistema de enqueueing de scripts y estilos
-  - Optimizaciones CSS con contain y will-change para mejor rendimiento
-  - Reducciones en el tamaño de archivos CSS y JS
-
-* 🔒 **MEJORAS DE SEGURIDAD:**
-  - Rate limiting mejorado (máximo 30 requests por hora)
-  - Headers HTTP de seguridad adicionales
-  - Verificación SSL mejorada en requests remotos
-  - Mejor manejo de errores en AJAX con mensajes específicos
-  - Timeout aumentado a 20 segundos para mejor reliability
-
-* 🐛 **CORRECCIÓN DE BUGS:**
-  - Arreglado problema de dependencia de jQuery no siempre disponible
-  - Mejor manejo de transients en la limpieza de caché
-  - Validación mejorada de datos de entrada
-  - Corrección en la limpieza de datos durante desinstalación
-
-* ⚡ **MEJORAS TÉCNICAS:**
-  - User-agent actualizado para mejor compatibilidad
-  - Nuevos estilos administrativos incluidos
-  - Mejor documentación del código con PHPDoc
-  - Separación mejorada de concerns entre archivos
-  - Cleanup completo de transients adicionales
-
 = 1.7 =
 * ⭐ Sistema de estrellas de valoración automático
 * 🔗 Reseñas clickeables con enlaces a Trustpilot
@@ -132,9 +104,6 @@ Dispones de 5 estilos: Moderno, Clásico, Minimalista, Elegante y Audaz, cada un
 * Versión inicial del plugin
 
 == Upgrade Notice ==
-= 1.7.1 =
-ACTUALIZACIÓN RECOMENDADA: Incluye importantes optimizaciones de rendimiento, mejoras de seguridad, corrección de bugs de JavaScript, y mejor manejo de caché. ¡Actualiza ahora para la mejor experiencia!
-
 = 1.7 =
 Esta versión incluye las estrellas de valoración, reseñas clickeables, nuevos layouts (Masonry y Timeline), y un sistema completo de personalización visual. ¡Actualiza para obtener la mejor experiencia!
 

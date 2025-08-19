@@ -1,0 +1,122 @@
+/* Admin styles for Trustpilot Reviews Plugin */
+
+.ctr-admin-container {
+    max-width: 1200px;
+    margin: 20px 0;
+}
+
+.ctr-settings-section {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    padding: 0;
+}
+
+.ctr-settings-section h3 {
+    background: #f7f7f7;
+    border-bottom: 1px solid #ccd0d4;
+    margin: 0;
+    padding: 15px 20px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.ctr-settings-section .inside {
+    padding: 20px;
+}
+
+.ctr-form-table {
+    margin-top: 0;
+}
+
+.ctr-form-table th {
+    width: 200px;
+    font-weight: 600;
+    color: #23282d;
+}
+
+.ctr-form-table td {
+    padding: 15px 10px;
+}
+
+.ctr-cache-info {
+    background: #f0f6fc;
+    border: 1px solid #c3d9ff;
+    border-radius: 4px;
+    padding: 12px 15px;
+    margin-bottom: 15px;
+}
+
+.ctr-cache-info p {
+    margin: 0;
+    color: #0073aa;
+}
+
+.ctr-clear-cache-btn {
+    background: #dc3545;
+    border: none;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.ctr-clear-cache-btn:hover {
+    background: #c82333;
+}
+
+.ctr-success-message {
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+    padding: 10px 15px;
+    border-radius: 4px;
+    margin: 10px 0;
+}
+
+.ctr-error-message {
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+    padding: 10px 15px;
+    border-radius: 4px;
+    margin: 10px 0;
+}
+
+/* Loading animation */
+.ctr-loading {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #0073aa;
+    border-radius: 50%;
+    animation: ctr-spin 1s linear infinite;
+    vertical-align: middle;
+    margin-left: 8px;
+}
+
+@keyframes ctr-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .ctr-form-table th {
+        width: auto;
+        display: block;
+        padding-bottom: 5px;
+    }
+    
+    .ctr-form-table td {
+        display: block;
+        padding-top: 5px;
+    }
+    
+    .ctr-admin-container {
+        margin: 10px 0;
+    }
+}

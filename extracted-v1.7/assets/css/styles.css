@@ -1,21 +1,10 @@
-/* Estilos para Trustpilot Reviews - Versión 1.7.1 - Optimizado */
-
-/* Performance optimizations */
-.ctr-carousel * {
-    box-sizing: border-box;
-}
-
-/* Preload animations to prevent layout shifts */
-.ctr-carousel {
-    contain: layout style;
-}
+/* Estilos para Trustpilot Reviews - Versión 1.7 */
 
 /* Contenedor principal */
 .ctr-carousel {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
     margin: 20px 0;
     line-height: 1.6;
-    will-change: auto; /* Optimize for animations */
 }
 
 /* Título */

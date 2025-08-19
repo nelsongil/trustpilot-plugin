@@ -4,7 +4,6 @@ if (!defined('ABSPATH')) exit;
 /**
  * Función para obtener reseñas de Trustpilot desde una página pública
  * Con sistema de caché y mejor manejo de errores
- * @return array Reviews data or error
  */
 function ctr_get_trustpilot_reviews() {
     // Check if caching is enabled
@@ -26,45 +25,31 @@ function ctr_get_trustpilot_reviews() {
         return ['error' => $error];
     }
 
-    // Enhanced rate limiting - check if we've made too many requests recently
+    // Rate limiting - check if we've made too many requests recently
     $last_request_time = get_transient('ctr_last_request_time');
-    $request_count = get_transient('ctr_request_count') ?: 0;
     $current_time = time();
     
-    // Allow maximum 30 requests per hour
-    if ($request_count >= 30) {
-        if ($cached_reviews !== false) {
-            return $cached_reviews;
-        }
-        return ['error' => __('Límite de solicitudes excedido. Intenta de nuevo en una hora.', 'custom-trustpilot-reviews')];
-    }
-    
-    if ($last_request_time && ($current_time - $last_request_time) < 120) { // Increased to 2 minutes
+    if ($last_request_time && ($current_time - $last_request_time) < 60) {
+        // If we made a request less than 1 minute ago, return cached data or error
         if ($cached_reviews !== false) {
             return $cached_reviews;
         }
         return ['error' => __('Demasiadas solicitudes. Intenta de nuevo en unos minutos.', 'custom-trustpilot-reviews')];
     }
     
-    // Set last request time and increment counter
-    set_transient('ctr_last_request_time', $current_time, 120);
-    set_transient('ctr_request_count', $request_count + 1, 3600); // Reset counter every hour
+    // Set last request time
+    set_transient('ctr_last_request_time', $current_time, 60);
 
-    // Make HTTP request with better error handling and timeout
+    // Make HTTP request with better error handling
     $response = wp_remote_get($url, [
-        'timeout' => 20, // Increased timeout for better reliability
-        'sslverify' => true, // Enhanced security
-        'user-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'timeout' => 15,
+        'user-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
         'headers' => [
             'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
             'Accept-Language' => 'es-ES,es;q=0.8,en-US;q=0.5,en;q=0.3',
-            'Accept-Encoding' => 'gzip, deflate',
             'Cache-Control' => 'no-cache',
-            'Pragma' => 'no-cache',
-            'DNT' => '1'
-        ],
-        'redirection' => 3, // Limit redirects for security
-        'httpversion' => '1.1'
+            'Pragma' => 'no-cache'
+        ]
     ]);
 
     // Check for request errors
@@ -386,12 +371,11 @@ function ctr_extract_reviews_alternative($xpath, $dom, $base_url) {
 }
 
 /**
- * Clear the reviews cache and rate limiting data
+ * Clear the reviews cache
  */
 function ctr_clear_reviews_cache() {
     delete_transient('ctr_reviews_cache');
     delete_transient('ctr_last_request_time');
-    delete_transient('ctr_request_count');
 }
 
 /**

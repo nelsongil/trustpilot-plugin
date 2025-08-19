@@ -473,19 +473,14 @@ function ctr_settings_page() {
 add_action('wp_ajax_ctr_clear_cache', 'ctr_ajax_clear_cache');
 
 function ctr_ajax_clear_cache() {
-    // Enhanced security checks
     if (!current_user_can('manage_options')) {
-        wp_send_json_error(array('message' => __('Permisos insuficientes.', 'custom-trustpilot-reviews')));
-        return;
+        wp_die();
     }
     
     if (!wp_verify_nonce($_POST['nonce'], 'ctr_clear_cache_nonce')) {
-        wp_send_json_error(array('message' => __('Token de seguridad inválido.', 'custom-trustpilot-reviews')));
-        return;
+        wp_die();
     }
     
-    // Use the enhanced cache clearing function
-    ctr_clear_reviews_cache();
-    
-    wp_send_json_success(array('message' => __('Caché eliminado exitosamente.', 'custom-trustpilot-reviews')));
+    delete_transient('ctr_reviews_cache');
+    wp_send_json_success();
 }

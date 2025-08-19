@@ -2,7 +2,7 @@
 /*
 Plugin Name: Custom Trustpilot Reviews
 Description: Muestra las valoraciones de Trustpilot en WordPress y Divi con un diseño personalizable.
-Version: 1.7.1
+Version: 1.7
 Author: Nelson Ariel Gil Olguin
 Text Domain: custom-trustpilot-reviews
 Requires at least: 5.6
@@ -14,7 +14,7 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 if (!defined('ABSPATH')) exit;
 
 // Define plugin constants
-define('CTR_PLUGIN_VERSION', '1.7.1');
+define('CTR_PLUGIN_VERSION', '1.7');
 define('CTR_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('CTR_PLUGIN_PATH', plugin_dir_path(__FILE__));
 
@@ -38,28 +38,11 @@ function ctr_add_admin_menu() {
     );
 }
 
-// Cargar estilos y scripts
+// Cargar estilos
 function ctr_enqueue_assets() {
     wp_enqueue_style('ctr-styles', CTR_PLUGIN_URL . 'assets/css/styles.css', array(), CTR_PLUGIN_VERSION);
-    
-    // Enqueue jQuery if needed for carousel functionality
-    global $post;
-    if (is_a($post, 'WP_Post') && (has_shortcode($post->post_content, 'custom_trustpilot_reviews') || 
-        strpos($post->post_content, 'ctr-carousel') !== false)) {
-        wp_enqueue_script('jquery');
-    }
 }
 add_action('wp_enqueue_scripts', 'ctr_enqueue_assets');
-
-// Enqueue admin styles and scripts
-function ctr_admin_enqueue_assets($hook) {
-    if ('toplevel_page_ctr-settings' !== $hook) {
-        return;
-    }
-    wp_enqueue_script('jquery');
-    wp_enqueue_style('ctr-admin-styles', CTR_PLUGIN_URL . 'assets/css/admin.css', array(), CTR_PLUGIN_VERSION);
-}
-add_action('admin_enqueue_scripts', 'ctr_admin_enqueue_assets');
 
 // Registro del módulo de Divi
 function ctr_register_divi_module() {
