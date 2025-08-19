@@ -76,7 +76,7 @@ function ctr_get_trustpilot_reviews() {
     }
 
     // Parse HTML with better error handling
-    $reviews = ctr_parse_trustpilot_html($html);
+    $reviews = ctr_parse_trustpilot_html($html, $url);
     
     // Cache the results if caching is enabled
     if ($enable_cache && !isset($reviews['error'])) {
@@ -90,7 +90,7 @@ function ctr_get_trustpilot_reviews() {
 /**
  * Parse Trustpilot HTML to extract reviews
  */
-function ctr_parse_trustpilot_html($html) {
+function ctr_parse_trustpilot_html($html, $base_url) {
     $reviews = [];
     
     // Suppress HTML parsing errors
@@ -116,7 +116,8 @@ function ctr_parse_trustpilot_html($html) {
         '//div[contains(@class, "review")]',
         '//div[contains(@class, "review-card")]',
         '//article',
-        '//div[contains(@class, "review-content")]'
+        '//div[contains(@class, "review-content")]',
+        '//div[contains(@class, "review-item")]'
     ];
     
     $review_cards = null;
@@ -132,7 +133,7 @@ function ctr_parse_trustpilot_html($html) {
     }
     
     foreach ($review_cards as $card) {
-        $review = ctr_extract_review_data($xpath, $card);
+        $review = ctr_extract_review_data($xpath, $card, $base_url);
         if ($review) {
             $reviews[] = $review;
         }
@@ -140,7 +141,7 @@ function ctr_parse_trustpilot_html($html) {
     
     // If no reviews were extracted, try alternative method
     if (empty($reviews)) {
-        $reviews = ctr_extract_reviews_alternative($xpath, $dom);
+        $reviews = ctr_extract_reviews_alternative($xpath, $dom, $base_url);
     }
     
     if (empty($reviews)) {
@@ -153,14 +154,15 @@ function ctr_parse_trustpilot_html($html) {
 /**
  * Extract review data from a review card element
  */
-function ctr_extract_review_data($xpath, $card) {
+function ctr_extract_review_data($xpath, $card, $base_url) {
     // Try multiple selectors for title
     $title_selectors = [
         './/h2',
         './/h3',
         './/h4',
         './/div[contains(@class, "title")]',
-        './/span[contains(@class, "title")]'
+        './/span[contains(@class, "title")]',
+        './/a[contains(@class, "title")]'
     ];
     
     $title = '';
@@ -178,6 +180,7 @@ function ctr_extract_review_data($xpath, $card) {
         './/div[contains(@class, "content")]',
         './/p[contains(@class, "review-text")]',
         './/div[contains(@class, "review-text")]',
+        './/p[contains(@class, "content")]',
         './/p'
     ];
     
@@ -195,7 +198,8 @@ function ctr_extract_review_data($xpath, $card) {
         './/span[contains(@class, "author")]',
         './/div[contains(@class, "author")]',
         './/span[contains(@class, "name")]',
-        './/div[contains(@class, "name")]'
+        './/div[contains(@class, "name")]',
+        './/a[contains(@class, "author")]'
     ];
     
     $author = __('Cliente Anónimo', 'custom-trustpilot-reviews');
@@ -210,12 +214,24 @@ function ctr_extract_review_data($xpath, $card) {
         }
     }
     
+    // Extract star rating
+    $rating = ctr_extract_star_rating($xpath, $card);
+    
+    // Extract review URL
+    $review_url = ctr_extract_review_url($xpath, $card, $base_url);
+    
+    // Extract review date
+    $review_date = ctr_extract_review_date($xpath, $card);
+    
     // Only return review if we have at least title or content
     if (!empty($title) || !empty($content)) {
         return [
             'title' => $title ?: __('Reseña sin título', 'custom-trustpilot-reviews'),
             'content' => $content ?: __('Reseña sin contenido', 'custom-trustpilot-reviews'),
-            'consumer' => ['displayName' => $author]
+            'consumer' => ['displayName' => $author],
+            'rating' => $rating,
+            'review_url' => $review_url,
+            'date' => $review_date
         ];
     }
     
@@ -223,9 +239,109 @@ function ctr_extract_review_data($xpath, $card) {
 }
 
 /**
+ * Extract star rating from review card
+ */
+function ctr_extract_star_rating($xpath, $card) {
+    // Try multiple selectors for star ratings
+    $rating_selectors = [
+        './/div[contains(@class, "star-rating")]',
+        './/div[contains(@class, "rating")]',
+        './/span[contains(@class, "stars")]',
+        './/div[contains(@class, "stars")]',
+        './/span[contains(@class, "rating")]',
+        './/div[contains(@class, "review-rating")]'
+    ];
+    
+    foreach ($rating_selectors as $selector) {
+        $rating_node = $xpath->query($selector, $card);
+        if ($rating_node && $rating_node->length > 0) {
+            $rating_html = $rating_node->item(0)->getAttribute('aria-label') ?: $rating_node->item(0)->textContent;
+            
+            // Try to extract rating from aria-label or text
+            if (preg_match('/(\d+)\s*(?:out of|de|stars?|estrellas?)/i', $rating_html, $matches)) {
+                return intval($matches[1]);
+            }
+            
+            // Try to count filled stars
+            $filled_stars = $xpath->query('.//span[contains(@class, "filled")]', $rating_node->item(0));
+            if ($filled_stars && $filled_stars->length > 0) {
+                return $filled_stars->length;
+            }
+            
+            // Try to count stars with specific classes
+            $star_classes = ['star-filled', 'star-full', 'star-active', 'star-on'];
+            foreach ($star_classes as $class) {
+                $stars = $xpath->query('.//span[contains(@class, "' . $class . '")]', $rating_node->item(0));
+                if ($stars && $stars->length > 0) {
+                    return $stars->length;
+                }
+            }
+        }
+    }
+    
+    // Default rating if none found
+    return 5;
+}
+
+/**
+ * Extract review URL from review card
+ */
+function ctr_extract_review_url($xpath, $card, $base_url) {
+    // Try to find review links
+    $link_selectors = [
+        './/a[contains(@class, "review")]',
+        './/a[contains(@href, "review")]',
+        './/a[contains(@class, "title")]',
+        './/a'
+    ];
+    
+    foreach ($link_selectors as $selector) {
+        $link_node = $xpath->query($selector, $card);
+        if ($link_node && $link_node->length > 0) {
+            $href = $link_node->item(0)->getAttribute('href');
+            if (!empty($href)) {
+                // Convert relative URLs to absolute
+                if (strpos($href, 'http') !== 0) {
+                    $href = rtrim($base_url, '/') . '/' . ltrim($href, '/');
+                }
+                return $href;
+            }
+        }
+    }
+    
+    return '';
+}
+
+/**
+ * Extract review date from review card
+ */
+function ctr_extract_review_date($xpath, $card) {
+    // Try multiple selectors for dates
+    $date_selectors = [
+        './/time',
+        './/span[contains(@class, "date")]',
+        './/div[contains(@class, "date")]',
+        './/span[contains(@class, "review-date")]',
+        './/div[contains(@class, "review-date")]'
+    ];
+    
+    foreach ($date_selectors as $selector) {
+        $date_node = $xpath->query($selector, $card);
+        if ($date_node && $date_node->length > 0) {
+            $date_text = trim($date_node->item(0)->textContent);
+            if (!empty($date_text)) {
+                return $date_text;
+            }
+        }
+    }
+    
+    return '';
+}
+
+/**
  * Alternative method to extract reviews if the main method fails
  */
-function ctr_extract_reviews_alternative($xpath, $dom) {
+function ctr_extract_reviews_alternative($xpath, $dom, $base_url) {
     $reviews = [];
     
     // Look for any text that might be review content
@@ -241,7 +357,10 @@ function ctr_extract_reviews_alternative($xpath, $dom) {
                 $reviews[] = [
                     'title' => __('Reseña de cliente', 'custom-trustpilot-reviews'),
                     'content' => $text,
-                    'consumer' => ['displayName' => __('Cliente Anónimo', 'custom-trustpilot-reviews')]
+                    'consumer' => ['displayName' => __('Cliente Anónimo', 'custom-trustpilot-reviews')],
+                    'rating' => 5,
+                    'review_url' => '',
+                    'date' => ''
                 ];
                 $count++;
             }

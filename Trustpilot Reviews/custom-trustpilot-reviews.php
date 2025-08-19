@@ -2,7 +2,7 @@
 /*
 Plugin Name: Custom Trustpilot Reviews
 Description: Muestra las valoraciones de Trustpilot en WordPress y Divi con un diseño personalizable.
-Version: 1.6
+Version: 1.7
 Author: Nelson Ariel Gil Olguin
 Text Domain: custom-trustpilot-reviews
 Requires at least: 5.6
@@ -14,7 +14,7 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 if (!defined('ABSPATH')) exit;
 
 // Define plugin constants
-define('CTR_PLUGIN_VERSION', '1.6');
+define('CTR_PLUGIN_VERSION', '1.7');
 define('CTR_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('CTR_PLUGIN_PATH', plugin_dir_path(__FILE__));
 
@@ -68,6 +68,46 @@ function ctr_activate_plugin() {
     }
     if (!get_option('ctr_cache_duration')) {
         update_option('ctr_cache_duration', 3600); // 1 hour
+    }
+    
+    // New layout and display options
+    if (!get_option('ctr_default_layout')) {
+        update_option('ctr_default_layout', 'grid');
+    }
+    if (!get_option('ctr_default_columns')) {
+        update_option('ctr_default_columns', 1);
+    }
+    if (!get_option('ctr_show_stars')) {
+        update_option('ctr_show_stars', 1);
+    }
+    if (!get_option('ctr_show_dates')) {
+        update_option('ctr_show_dates', 1);
+    }
+    if (!get_option('ctr_clickable_reviews')) {
+        update_option('ctr_clickable_reviews', 1);
+    }
+    if (!get_option('ctr_show_review_button')) {
+        update_option('ctr_show_review_button', 1);
+    }
+    if (!get_option('ctr_button_text')) {
+        update_option('ctr_button_text', '¡Valora en Trustpilot!');
+    }
+    if (!get_option('ctr_button_url')) {
+        update_option('ctr_button_url', 'https://es.trustpilot.com/evaluate/nelsongil.com');
+    }
+    
+    // Style options
+    if (!get_option('ctr_card_style')) {
+        update_option('ctr_card_style', 'modern');
+    }
+    if (!get_option('ctr_color_scheme')) {
+        update_option('ctr_color_scheme', 'default');
+    }
+    if (!get_option('ctr_enable_animations')) {
+        update_option('ctr_enable_animations', 1);
+    }
+    if (!get_option('ctr_enable_hover_effects')) {
+        update_option('ctr_enable_hover_effects', 1);
     }
 }
 
