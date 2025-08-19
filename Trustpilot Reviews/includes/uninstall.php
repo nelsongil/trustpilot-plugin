@@ -24,9 +24,22 @@ delete_option('ctr_color_scheme');
 delete_option('ctr_enable_animations');
 delete_option('ctr_enable_hover_effects');
 
+// Eliminar opciones del sistema de actualización
+delete_option('ctr_auto_update_enabled');
+delete_option('ctr_update_channel');
+
 // Eliminar transientes del plugin
 delete_transient('ctr_reviews_cache');
 delete_transient('ctr_last_request_time');
 
+// Eliminar transientes del sistema de actualización
+delete_transient('ctr_update_available');
+delete_transient('ctr_latest_version_info');
+delete_transient('ctr_last_update_check');
+
 // Limpiar cualquier caché que pueda haber quedado
 wp_cache_flush();
+
+// Limpiar eventos programados
+wp_clear_scheduled_hook('ctr_clear_cache');
+wp_clear_scheduled_hook('ctr_check_for_updates');

@@ -33,6 +33,10 @@ function ctr_settings_page() {
         $enable_animations = isset($_POST['ctr_enable_animations']) ? 1 : 0;
         $enable_hover_effects = isset($_POST['ctr_enable_hover_effects']) ? 1 : 0;
         
+        // Update settings
+        $auto_update_enabled = isset($_POST['ctr_auto_update_enabled']) ? 1 : 0;
+        $update_channel = sanitize_text_field($_POST['ctr_update_channel']);
+        
         // Validate reviews count
         if ($reviews_count < 1 || $reviews_count > 50) {
             $reviews_count = 5;
@@ -71,6 +75,10 @@ function ctr_settings_page() {
         update_option('ctr_enable_animations', $enable_animations);
         update_option('ctr_enable_hover_effects', $enable_hover_effects);
         
+        // Update options
+        update_option('ctr_auto_update_enabled', $auto_update_enabled);
+        update_option('ctr_update_channel', $update_channel);
+        
         // Clear cache if cache settings changed
         if ($enable_cache) {
             delete_transient('ctr_reviews_cache');
@@ -102,9 +110,33 @@ function ctr_settings_page() {
     $enable_animations = get_option('ctr_enable_animations', 1);
     $enable_hover_effects = get_option('ctr_enable_hover_effects', 1);
     
+    // Update options
+    $auto_update_enabled = get_option('ctr_auto_update_enabled', 1);
+    $update_channel = get_option('ctr_update_channel', 'stable');
+    
+    // Get update information
+    $update_info = ctr_get_update_info();
+    
     ?>
     <div class="wrap">
         <h1><?php _e('Configuración de Trustpilot Reviews', 'custom-trustpilot-reviews'); ?></h1>
+        
+        <!-- Update Notification -->
+        <?php if ($update_info['has_update']): ?>
+            <div class="notice notice-info is-dismissible">
+                <p>
+                    <strong><?php _e('¡Nueva versión disponible!', 'custom-trustpilot-reviews'); ?></strong>
+                    <?php printf(
+                        __('Versión actual: %s | Nueva versión: %s', 'custom-trustpilot-reviews'),
+                        esc_html($update_info['current_version']),
+                        esc_html($update_info['new_version'])
+                    ); ?>
+                    <a href="<?php echo esc_url($update_info['update_url']); ?>" class="button button-primary" style="margin-left: 10px;">
+                        <?php _e('Actualizar ahora', 'custom-trustpilot-reviews'); ?>
+                    </a>
+                </p>
+            </div>
+        <?php endif; ?>
         
         <form method="POST">
             <?php wp_nonce_field('ctr_settings_nonce', 'ctr_nonce'); ?>
@@ -113,6 +145,7 @@ function ctr_settings_page() {
                 <a href="#general" class="nav-tab nav-tab-active"><?php _e('General', 'custom-trustpilot-reviews'); ?></a>
                 <a href="#display" class="nav-tab"><?php _e('Visualización', 'custom-trustpilot-reviews'); ?></a>
                 <a href="#style" class="nav-tab"><?php _e('Estilos', 'custom-trustpilot-reviews'); ?></a>
+                <a href="#updates" class="nav-tab"><?php _e('Actualizaciones', 'custom-trustpilot-reviews'); ?></a>
                 <a href="#advanced" class="nav-tab"><?php _e('Avanzado', 'custom-trustpilot-reviews'); ?></a>
             </h2>
             
@@ -345,6 +378,77 @@ function ctr_settings_page() {
                 </table>
             </div>
             
+            <!-- Updates Settings Tab -->
+            <div id="updates" class="tab-content" style="display: none;">
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">
+                            <label for="ctr_auto_update_enabled"><?php _e('Actualizaciones automáticas:', 'custom-trustpilot-reviews'); ?></label>
+                        </th>
+                        <td>
+                            <label>
+                                <input type="checkbox" 
+                                       id="ctr_auto_update_enabled"
+                                       name="ctr_auto_update_enabled" 
+                                       value="1" 
+                                       <?php checked($auto_update_enabled, 1); ?>>
+                                <?php _e('Habilitar verificación automática de actualizaciones', 'custom-trustpilot-reviews'); ?>
+                            </label>
+                            <p class="description">
+                                <?php _e('El plugin verificará automáticamente si hay nuevas versiones disponibles.', 'custom-trustpilot-reviews'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <label for="ctr_update_channel"><?php _e('Canal de actualizaciones:', 'custom-trustpilot-reviews'); ?></label>
+                        </th>
+                        <td>
+                            <select id="ctr_update_channel" name="ctr_update_channel">
+                                <option value="stable" <?php selected($update_channel, 'stable'); ?>><?php _e('Estable (Recomendado)', 'custom-trustpilot-reviews'); ?></option>
+                                <option value="beta" <?php selected($update_channel, 'beta'); ?>><?php _e('Beta (Para desarrolladores)', 'custom-trustpilot-reviews'); ?></option>
+                            </select>
+                            <p class="description">
+                                <?php _e('Canal de actualizaciones que quieres seguir.', 'custom-trustpilot-reviews'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row"><?php _e('Estado actual:', 'custom-trustpilot-reviews'); ?></th>
+                        <td>
+                            <p>
+                                <strong><?php _e('Versión actual:', 'custom-trustpilot-reviews'); ?></strong> 
+                                <?php echo esc_html(CTR_PLUGIN_VERSION); ?>
+                            </p>
+                            
+                            <?php if ($update_info['has_update']): ?>
+                                <p style="color: #0073e6;">
+                                    <strong><?php _e('Nueva versión disponible:', 'custom-trustpilot-reviews'); ?></strong> 
+                                    <?php echo esc_html($update_info['new_version']); ?>
+                                </p>
+                                <p>
+                                    <a href="<?php echo esc_url($update_info['update_url']); ?>" class="button button-primary">
+                                        <?php _e('Actualizar ahora', 'custom-trustpilot-reviews'); ?>
+                                    </a>
+                                </p>
+                            <?php else: ?>
+                                <p style="color: #28a745;">
+                                    <strong><?php _e('Estás usando la versión más reciente.', 'custom-trustpilot-reviews'); ?></strong>
+                                </p>
+                            <?php endif; ?>
+                            
+                            <p>
+                                <a href="<?php echo wp_nonce_url(admin_url('admin.php?page=ctr-settings&ctr_force_update_check=1'), 'ctr_force_update_check'); ?>" class="button button-secondary">
+                                    <?php _e('Verificar actualizaciones ahora', 'custom-trustpilot-reviews'); ?>
+                                </a>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            
             <!-- Advanced Settings Tab -->
             <div id="advanced" class="tab-content" style="display: none;">
                 <table class="form-table">
@@ -413,7 +517,7 @@ function ctr_settings_page() {
         <ul style="margin-left: 20px;">
             <li><code>layout</code>: grid, list, carousel, masonry, timeline</li>
             <li><code>count</code>: número de reseñas (1-50)</li>
-            <li><code>columns</code>: columnas para grid (1-4)</li>
+            <li><code>columns</code>: número de columnas para grid (1-4)</li>
             <li><code>show_stars</code>: mostrar estrellas (true/false)</li>
             <li><code>show_dates</code>: mostrar fechas (true/false)</li>
             <li><code>clickable</code>: reseñas clickeables (true/false)</li>

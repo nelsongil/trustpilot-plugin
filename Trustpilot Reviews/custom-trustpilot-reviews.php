@@ -9,6 +9,7 @@ Requires at least: 5.6
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
+Update URI: https://api.github.com/repos/nelsongil/trustpilot-reviews/releases/latest
 */
 
 if (!defined('ABSPATH')) exit;
@@ -17,11 +18,14 @@ if (!defined('ABSPATH')) exit;
 define('CTR_PLUGIN_VERSION', '1.7');
 define('CTR_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('CTR_PLUGIN_PATH', plugin_dir_path(__FILE__));
+define('CTR_PLUGIN_SLUG', 'custom-trustpilot-reviews');
+define('CTR_PLUGIN_BASENAME', plugin_basename(__FILE__));
 
 // Incluir archivos necesarios
 require_once CTR_PLUGIN_PATH . 'includes/admin-options.php';
 require_once CTR_PLUGIN_PATH . 'includes/api.php';
 require_once CTR_PLUGIN_PATH . 'includes/shortcode.php';
+require_once CTR_PLUGIN_PATH . 'includes/updater.php';
 
 // Registrar el menú del administrador
 add_action('admin_menu', 'ctr_add_admin_menu');
@@ -109,6 +113,14 @@ function ctr_activate_plugin() {
     if (!get_option('ctr_enable_hover_effects')) {
         update_option('ctr_enable_hover_effects', 1);
     }
+    
+    // Update system options
+    if (!get_option('ctr_auto_update_enabled')) {
+        update_option('ctr_auto_update_enabled', 1);
+    }
+    if (!get_option('ctr_update_channel')) {
+        update_option('ctr_update_channel', 'stable');
+    }
 }
 
 // Deactivation hook
@@ -117,6 +129,7 @@ register_deactivation_hook(__FILE__, 'ctr_deactivate_plugin');
 function ctr_deactivate_plugin() {
     // Clear any scheduled events
     wp_clear_scheduled_hook('ctr_clear_cache');
+    wp_clear_scheduled_hook('ctr_check_for_updates');
 }
 
 // Add settings link to plugins page
@@ -126,4 +139,55 @@ function ctr_add_settings_link($links) {
     $settings_link = '<a href="' . admin_url('admin.php?page=ctr-settings') . '">' . __('Configuración', 'custom-trustpilot-reviews') . '</a>';
     array_unshift($links, $settings_link);
     return $links;
+}
+
+// Initialize the auto-updater
+add_action('init', 'ctr_init_auto_updater');
+
+function ctr_init_auto_updater() {
+    // Only initialize if user has permissions
+    if (current_user_can('update_plugins')) {
+        new CTR_Plugin_Updater();
+    }
+}
+
+// Add update notification in admin
+add_action('admin_notices', 'ctr_admin_update_notice');
+
+function ctr_admin_update_notice() {
+    if (current_user_can('update_plugins')) {
+        $update_info = get_transient('ctr_update_available');
+        if ($update_info && !empty($update_info['version'])) {
+            $current_version = CTR_PLUGIN_VERSION;
+            $new_version = $update_info['version'];
+            
+            if (version_compare($new_version, $current_version, '>')) {
+                echo '<div class="notice notice-info is-dismissible">';
+                echo '<p><strong>Trustpilot Reviews:</strong> ';
+                printf(
+                    __('Hay una nueva versión disponible (%s). <a href="%s">Actualizar ahora</a>', 'custom-trustpilot-reviews'),
+                    esc_html($new_version),
+                    esc_url(admin_url('plugins.php?action=upgrade-plugin&plugin=' . CTR_PLUGIN_BASENAME))
+                );
+                echo '</p>';
+                echo '</div>';
+            }
+        }
+    }
+}
+
+// Schedule update checks
+add_action('wp_scheduled_delete', 'ctr_schedule_update_checks');
+
+function ctr_schedule_update_checks() {
+    if (!wp_next_scheduled('ctr_check_for_updates')) {
+        wp_schedule_event(time(), 'daily', 'ctr_check_for_updates');
+    }
+}
+
+// Clear scheduled events on deactivation
+register_deactivation_hook(__FILE__, 'ctr_clear_scheduled_events');
+
+function ctr_clear_scheduled_events() {
+    wp_clear_scheduled_hook('ctr_check_for_updates');
 }
