@@ -1,0 +1,931 @@
+/* ============================================================
+   Custom Trustpilot Reviews - styles.css
+   Version: 1.8
+   ============================================================ */
+
+/* Reset básico */
+* {
+    box-sizing: border-box;
+}
+
+/* ============================================================
+   CONTENEDOR PRINCIPAL
+   ============================================================ */
+.ctr-carousel {
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    margin: 20px 0;
+    line-height: 1.6;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+/* ============================================================
+   TÍTULO
+   ============================================================ */
+.ctr-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 36px;
+    color: #1a1a2e;
+    margin-bottom: 20px;
+    font-weight: 600;
+    text-align: center;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.ctr-title img {
+    max-height: 32px;
+    width: auto;
+    vertical-align: middle;
+    mix-blend-mode: multiply;
+    /* Helps hide white backgrounds on light themes */
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+/* ============================================================
+   BOTÓN — Color oficial de Trustpilot
+   ============================================================ */
+.ctr-button-container {
+    text-align: center;
+    margin: 20px auto 40px auto;
+    width: 100%;
+    display: block;
+    clear: both;
+}
+
+.ctr-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 28px;
+    background: #00b67a;
+    color: #fff !important;
+    text-decoration: none;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.3px;
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 14px rgba(0, 182, 122, 0.3);
+    border: none;
+    cursor: pointer;
+    width: auto;
+    max-width: 100%;
+    text-align: center;
+}
+
+.ctr-button:hover {
+    background: #009e6a;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 182, 122, 0.4);
+    color: #fff !important;
+    text-decoration: none;
+}
+
+.ctr-button:focus {
+    outline: 2px solid #00b67a;
+    outline-offset: 2px;
+}
+
+/* ============================================================
+   ESTRELLAS
+   ============================================================ */
+.ctr-stars {
+    margin-bottom: 12px;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+}
+
+.ctr-star {
+    font-size: 18px;
+    margin: 0 1px;
+    transition: transform 0.2s ease;
+    display: inline-block;
+}
+
+.ctr-star-filled {
+    color: #f5a623;
+}
+
+.ctr-star-empty {
+    color: #ddd;
+}
+
+.ctr-star:hover {
+    transform: scale(1.1);
+}
+
+.ctr-rating-text {
+    margin-left: 4px;
+    font-size: 13px;
+    color: #888;
+    font-weight: 500;
+    display: inline-block;
+}
+
+/* ============================================================
+   CONTENEDOR DE RESEÑAS
+   ============================================================ */
+.ctr-reviews {
+    margin: 0 auto;
+    width: 100%;
+    max-width: 100%;
+}
+
+/* ============================================================
+   LAYOUT GRID
+   ============================================================ */
+.ctr-grid {
+    display: grid;
+    gap: 24px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.ctr-grid[style*="grid-template-columns: repeat(1, 1fr)"] {
+    max-width: 600px;
+}
+
+.ctr-grid[style*="grid-template-columns: repeat(2, 1fr)"] {
+    max-width: 820px;
+}
+
+.ctr-grid[style*="grid-template-columns: repeat(3, 1fr)"] {
+    max-width: 1100px;
+}
+
+.ctr-grid[style*="grid-template-columns: repeat(4, 1fr)"] {
+    max-width: 1200px;
+}
+
+/* ============================================================
+   LAYOUT LIST
+   ============================================================ */
+.ctr-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+}
+
+/* ============================================================
+   LAYOUT MASONRY
+   ============================================================ */
+.ctr-masonry {
+    columns: 1;
+    column-gap: 24px;
+    width: 100%;
+}
+
+.ctr-masonry-item {
+    break-inside: avoid;
+    margin-bottom: 24px;
+    display: block;
+}
+
+/* ============================================================
+   LAYOUT TIMELINE
+   ============================================================ */
+.ctr-timeline {
+    position: relative;
+    width: 100%;
+    padding-left: 60px;
+}
+
+.ctr-timeline-line {
+    position: absolute;
+    left: 30px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: #00b67a;
+}
+
+.ctr-timeline-item {
+    position: relative;
+    margin-bottom: 30px;
+    width: 100%;
+}
+
+.ctr-timeline-marker {
+    position: absolute;
+    left: -45px;
+    top: 20px;
+    width: 20px;
+    height: 20px;
+    background-color: #00b67a;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 2px #00b67a;
+}
+
+.ctr-timeline-content {
+    background-color: #fff;
+    border: 1px solid #eaecf0;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+    width: 100%;
+    margin-left: 0;
+}
+
+/* ============================================================
+   LAYOUT CAROUSEL
+   ============================================================ */
+.ctr-carousel-container {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 48px;
+    /* Space for side arrows */
+    box-sizing: border-box;
+}
+
+.ctr-carousel-slides {
+    display: flex !important;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 100%;
+    will-change: transform;
+}
+
+.ctr-review-slide {
+    flex: 0 0 100% !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    padding: 10px 6px;
+    box-sizing: border-box;
+    display: block !important;
+    flex-shrink: 0 !important;
+}
+
+.ctr-carousel-nav {
+    display: none;
+    /* Hide the old inline nav */
+}
+
+/* Side arrow buttons — absolute positioned */
+.ctr-prev,
+.ctr-next {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid #e8ebed;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10);
+    transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    z-index: 10;
+    padding: 0;
+    line-height: 1;
+    color: #1a1a2e;
+    font-size: 18px;
+}
+
+.ctr-prev {
+    left: 0;
+}
+
+.ctr-next {
+    right: 0;
+}
+
+.ctr-prev:hover,
+.ctr-next:hover {
+    background: #fff;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    transform: translateY(-50%) scale(1.05);
+}
+
+.ctr-prev:active,
+.ctr-next:active {
+    transform: translateY(-50%) scale(0.97);
+}
+
+.ctr-prev:disabled,
+.ctr-next:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    transform: translateY(-50%);
+    box-shadow: none;
+}
+
+/* ============================================================
+   TARJETAS DE RESEÑAS
+   ============================================================ */
+.ctr-review-card,
+.ctr-review-item,
+.ctr-review-slide {
+    background: #fff;
+    border: 1px solid #eaecf0;
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 0;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    width: 100%;
+    box-sizing: border-box;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    animation: ctr-fadeUp 0.5s ease both;
+}
+
+.ctr-review-card:nth-child(2),
+.ctr-review-item:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.ctr-review-card:nth-child(3),
+.ctr-review-item:nth-child(3) {
+    animation-delay: 0.2s;
+}
+
+.ctr-review-card:nth-child(4),
+.ctr-review-item:nth-child(4) {
+    animation-delay: 0.3s;
+}
+
+.ctr-review-card:hover,
+.ctr-review-item:hover,
+.ctr-review-slide:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.11);
+}
+
+/* Título de la reseña */
+.ctr-review-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a2e;
+    line-height: 1.4;
+    text-align: left;
+    word-wrap: break-word;
+    margin: 0;
+}
+
+/* Contenido de la reseña */
+.ctr-review-content {
+    font-size: 14px;
+    color: #555;
+    line-height: 1.7;
+    text-align: left;
+    flex-grow: 1;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    margin: 0;
+}
+
+/* Separador */
+.ctr-review-divider {
+    border: none;
+    border-top: 1px solid #f0f0f0;
+    margin: 0;
+}
+
+/* ============================================================
+   AUTOR CON AVATAR
+   ============================================================ */
+.ctr-review-author {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-top: none;
+    padding-top: 0;
+    color: #888;
+    font-size: 14px;
+    text-align: left;
+}
+
+.ctr-review-author strong {
+    color: #1a1a2e;
+    font-weight: 600;
+}
+
+/* Avatar con iniciales */
+.ctr-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+    letter-spacing: 0.5px;
+}
+
+.ctr-avatar-0 {
+    background: linear-gradient(135deg, #00b67a, #007a52);
+}
+
+.ctr-avatar-1 {
+    background: linear-gradient(135deg, #4f7ef7, #2d4cc8);
+}
+
+.ctr-avatar-2 {
+    background: linear-gradient(135deg, #f7934f, #c85e2d);
+}
+
+.ctr-avatar-3 {
+    background: linear-gradient(135deg, #a855f7, #7c3aed);
+}
+
+.ctr-avatar-4 {
+    background: linear-gradient(135deg, #f43f5e, #be123c);
+}
+
+.ctr-author-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.ctr-author-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a2e;
+    line-height: 1.3;
+}
+
+.ctr-review-date {
+    color: #aaa;
+    font-size: 12px;
+    margin-top: 0;
+    display: block;
+}
+
+/* ============================================================
+   ESTILOS DE TARJETAS
+   ============================================================ */
+.ctr-style-classic .ctr-review-card,
+.ctr-style-classic .ctr-review-item,
+.ctr-style-classic .ctr-review-slide {
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+
+.ctr-style-minimal .ctr-review-card,
+.ctr-style-minimal .ctr-review-item,
+.ctr-style-minimal .ctr-review-slide {
+    border: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.ctr-style-elegant .ctr-review-card,
+.ctr-style-elegant .ctr-review-item,
+.ctr-style-elegant .ctr-review-slide {
+    border-radius: 20px;
+    border: 1px solid #e8e8e8;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.ctr-style-bold .ctr-review-card,
+.ctr-style-bold .ctr-review-item,
+.ctr-style-bold .ctr-review-slide {
+    border-radius: 0;
+    box-shadow: 0 4px 0 #00b67a;
+    border: 2px solid #00b67a;
+}
+
+/* ============================================================
+   ESQUEMAS DE COLORES
+   ============================================================ */
+.ctr-colors-blue .ctr-button {
+    background: #0073e6;
+    box-shadow: 0 4px 14px rgba(0, 115, 230, 0.3);
+}
+
+.ctr-colors-blue .ctr-button:hover {
+    background: #0056b3;
+}
+
+.ctr-colors-blue .ctr-timeline-line,
+.ctr-colors-blue .ctr-timeline-marker {
+    background-color: #0073e6;
+}
+
+.ctr-colors-blue .ctr-prev,
+.ctr-colors-blue .ctr-next {
+    background-color: #0073e6;
+}
+
+.ctr-colors-green .ctr-button {
+    background: #28a745;
+    box-shadow: 0 4px 14px rgba(40, 167, 69, 0.3);
+}
+
+.ctr-colors-green .ctr-button:hover {
+    background: #1e7e34;
+}
+
+.ctr-colors-green .ctr-timeline-line,
+.ctr-colors-green .ctr-timeline-marker {
+    background-color: #28a745;
+}
+
+.ctr-colors-purple .ctr-button {
+    background: #6f42c1;
+    box-shadow: 0 4px 14px rgba(111, 66, 193, 0.3);
+}
+
+.ctr-colors-purple .ctr-button:hover {
+    background: #5a32a3;
+}
+
+.ctr-colors-purple .ctr-timeline-line,
+.ctr-colors-purple .ctr-timeline-marker {
+    background-color: #6f42c1;
+}
+
+.ctr-colors-orange .ctr-button {
+    background: #fd7e14;
+    box-shadow: 0 4px 14px rgba(253, 126, 20, 0.3);
+}
+
+.ctr-colors-orange .ctr-button:hover {
+    background: #e96b02;
+}
+
+.ctr-colors-orange .ctr-timeline-line,
+.ctr-colors-orange .ctr-timeline-marker {
+    background-color: #fd7e14;
+}
+
+.ctr-colors-dark .ctr-button {
+    background: #343a40;
+    box-shadow: 0 4px 14px rgba(52, 58, 64, 0.3);
+}
+
+.ctr-colors-dark .ctr-button:hover {
+    background: #23272b;
+}
+
+.ctr-colors-dark .ctr-timeline-line,
+.ctr-colors-dark .ctr-timeline-marker {
+    background-color: #343a40;
+}
+
+/* ============================================================
+   RESEÑAS CLICKEABLES
+   ============================================================ */
+.ctr-clickable {
+    cursor: pointer;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.ctr-clickable:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.11);
+}
+
+.ctr-clickable:focus {
+    outline: 2px solid #00b67a;
+    outline-offset: 2px;
+}
+
+/* ============================================================
+   ANIMACIONES
+   ============================================================ */
+@keyframes ctr-fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.ctr-timeline-item:nth-child(odd) .ctr-timeline-content {
+    animation: slideInLeft 0.6s ease-out;
+}
+
+.ctr-timeline-item:nth-child(even) .ctr-timeline-content {
+    animation: slideInRight 0.6s ease-out;
+}
+
+/* ============================================================
+   DIVI
+   ============================================================ */
+.ctr-divi-module .ctr-reviews {
+    margin: 0;
+}
+
+.ctr-divi-module .ctr-title {
+    text-align: center;
+    justify-content: center;
+}
+
+/* ============================================================
+   ACCESIBILIDAD
+   ============================================================ */
+.ctr-button:focus,
+.ctr-prev:focus,
+.ctr-next:focus {
+    outline: 2px solid #00b67a;
+    outline-offset: 2px;
+}
+
+/* ============================================================
+   MODO OSCURO
+   ============================================================ */
+@media (prefers-color-scheme: dark) {
+
+    .ctr-review-card,
+    .ctr-review-item,
+    .ctr-review-slide,
+    .ctr-timeline-content {
+        background-color: #2d2d2d;
+        border-color: #404040;
+        color: #e0e0e0;
+    }
+
+    .ctr-review-title,
+    .ctr-author-name {
+        color: #ffffff;
+    }
+
+    .ctr-review-content {
+        color: #cccccc;
+    }
+
+    .ctr-review-divider {
+        border-top-color: #404040;
+    }
+
+    .ctr-title {
+        color: #ffffff;
+    }
+
+    .ctr-style-minimal .ctr-review-card,
+    .ctr-style-minimal .ctr-review-item,
+    .ctr-style-minimal .ctr-review-slide {
+        background-color: #1a1a1a;
+    }
+}
+
+/* ============================================================
+   RESPONSIVE — 768px
+   ============================================================ */
+@media (max-width: 768px) {
+    .ctr-carousel {
+        margin: 15px 0;
+        padding: 0 10px;
+    }
+
+    .ctr-title {
+        font-size: 26px;
+        margin-bottom: 15px;
+        padding: 0 10px;
+        flex-wrap: wrap;
+    }
+
+    .ctr-grid {
+        grid-template-columns: 1fr !important;
+        gap: 16px;
+        padding: 0 10px;
+    }
+
+    .ctr-masonry {
+        columns: 1 !important;
+        padding: 0 10px;
+    }
+
+    .ctr-timeline {
+        padding-left: 40px;
+    }
+
+    .ctr-timeline-line {
+        left: 15px;
+    }
+
+    .ctr-timeline-marker {
+        left: 15px;
+    }
+
+    .ctr-timeline-content {
+        width: calc(100% - 40px);
+        margin-left: 40px !important;
+        padding: 16px;
+    }
+
+    .ctr-review-card,
+    .ctr-review-item,
+    .ctr-review-slide {
+        padding: 20px;
+        border-radius: 12px;
+    }
+
+    .ctr-button {
+        padding: 12px 20px;
+        font-size: 14px;
+        width: 100%;
+        max-width: 280px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: center;
+    }
+
+    .ctr-carousel-container {
+        margin: 0;
+        padding: 0 10px;
+    }
+
+    .ctr-carousel-nav {
+        margin-top: 15px;
+    }
+
+    .ctr-prev,
+    .ctr-next {
+        padding: 12px 18px;
+        font-size: 14px;
+        min-width: 50px;
+        min-height: 50px;
+    }
+
+    .ctr-review-title {
+        font-size: 15px;
+    }
+
+    .ctr-review-content {
+        font-size: 14px;
+    }
+
+    .ctr-review-author {
+        font-size: 13px;
+    }
+}
+
+/* ============================================================
+   RESPONSIVE — 480px
+   ============================================================ */
+@media (max-width: 480px) {
+    .ctr-carousel {
+        margin: 10px 0;
+        padding: 0 5px;
+    }
+
+    .ctr-title {
+        font-size: 22px;
+        margin-bottom: 12px;
+        padding: 0 5px;
+    }
+
+    .ctr-review-card,
+    .ctr-review-item,
+    .ctr-review-slide {
+        padding: 16px;
+        border-radius: 10px;
+        gap: 12px;
+    }
+
+    .ctr-review-title {
+        font-size: 15px;
+    }
+
+    .ctr-review-content {
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    .ctr-prev,
+    .ctr-next {
+        padding: 10px 16px;
+        font-size: 13px;
+        min-width: 44px;
+        min-height: 44px;
+        margin: 0 2px;
+    }
+
+    .ctr-star {
+        font-size: 16px;
+        margin: 0 1px;
+    }
+
+    .ctr-button {
+        padding: 10px 16px;
+        font-size: 13px;
+        max-width: 240px;
+    }
+
+    .ctr-timeline {
+        padding-left: 30px;
+    }
+
+    .ctr-timeline-line {
+        left: 10px;
+    }
+
+    .ctr-timeline-marker {
+        left: 10px;
+        width: 16px;
+        height: 16px;
+    }
+
+    .ctr-timeline-content {
+        width: calc(100% - 30px);
+        margin-left: 30px !important;
+        padding: 14px;
+    }
+
+    .ctr-avatar {
+        width: 34px;
+        height: 34px;
+        font-size: 12px;
+    }
+}
+
+/* ============================================================
+   FIXES MÓVILES
+   ============================================================ */
+@media (max-width: 767px) {
+
+    .ctr-carousel,
+    .ctr-grid,
+    .ctr-list,
+    .ctr-masonry,
+    .ctr-timeline {
+        -webkit-overflow-scrolling: touch;
+        overflow-x: hidden;
+    }
+
+    .ctr-review-card,
+    .ctr-review-item,
+    .ctr-review-slide {
+        -webkit-overflow-scrolling: touch;
+        overflow-x: hidden;
+        word-break: break-word;
+    }
+
+    .ctr-title img {
+        max-width: 100%;
+        height: auto;
+    }
+
+    .ctr-review-content {
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+}
+
+@supports (-webkit-touch-callout: none) {
+    .ctr-carousel {
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+@supports (-moz-appearance: none) {
+    .ctr-carousel {
+        scrollbar-width: thin;
+    }
+}
