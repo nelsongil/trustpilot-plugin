@@ -1,0 +1,45 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'   # Se dispara con tags como v2.1, v2.2, etc.
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Extraer versión del tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+      - name: Actualizar versión en plugin PHP
+        run: |
+          sed -i "s/Version: .*/Version: ${{ steps.version.outputs.VERSION }}/" "Trustpilot Reviews/custom-trustpilot-reviews.php"
+          sed -i "s/define('CTR_PLUGIN_VERSION', '.*')/define('CTR_PLUGIN_VERSION', '${{ steps.version.outputs.VERSION }}')/" "Trustpilot Reviews/custom-trustpilot-reviews.php"
+
+      - name: Crear ZIP del plugin
+        run: |
+          cd "Trustpilot Reviews"
+          zip -r "../trustpilot-reviews-${{ steps.version.outputs.VERSION }}.zip" \
+            custom-trustpilot-reviews.php \
+            readme.txt \
+            LICENSE \
+            CHANGELOG.md \
+            README.md \
+            assets/ \
+            includes/ \
+            --exclude "*.zip" \
+            --exclude ".git*"
+
+      - name: Crear GitHub Release y subir ZIP
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Trustpilot Reviews v${{ steps.version.outputs.VERSION }}"
+          body_path: "Trustpilot Reviews/CHANGELOG.md"
+          files: trustpilot-reviews-${{ steps.version.outputs.VERSION }}.zip
+          fail_on_unmatched_files: true
