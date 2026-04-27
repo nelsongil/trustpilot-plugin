@@ -1,0 +1,19 @@
+# Normaliza finales de línea para evitar diff fantasma CRLF↔LF
+* text=auto eol=lf
+
+*.php  text eol=lf
+*.css  text eol=lf
+*.js   text eol=lf
+*.html text eol=lf
+*.md   text eol=lf
+*.txt  text eol=lf
+*.yml  text eol=lf
+*.json text eol=lf
+
+# Binarios — nunca tocar
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+*.zip  binary
