@@ -8,6 +8,7 @@ if (!defined('ABSPATH')) exit;
 function ctr_render_reviews_carousel($atts = array()) {
     $atts = shortcode_atts(array(
         'count'       => get_option('ctr_reviews_count', 5),
+        'per_page'    => get_option('ctr_reviews_per_page', 0), // 0 = sin paginación
         'title'       => get_option('ctr_reviews_title', __('Valoraciones de Trustpilot', 'custom-trustpilot-reviews')),
         'show_button' => get_option('ctr_show_review_button', 1) ? 'true' : 'false',
         'button_text' => get_option('ctr_button_text', __('¡Valora en Trustpilot!', 'custom-trustpilot-reviews')),
@@ -23,6 +24,10 @@ function ctr_render_reviews_carousel($atts = array()) {
 
     $reviews_count = absint($atts['count']);
     if ($reviews_count < 1 || $reviews_count > 50) $reviews_count = 5;
+
+    $per_page     = absint($atts['per_page']);
+    // per_page debe ser menor que count; si no, desactivar paginación
+    if ($per_page < 1 || $per_page >= $reviews_count) $per_page = 0;
 
     $title        = sanitize_text_field($atts['title']);
     $show_button  = filter_var($atts['show_button'], FILTER_VALIDATE_BOOLEAN);
@@ -75,18 +80,32 @@ function ctr_render_reviews_carousel($atts = array()) {
         <?php endif; ?>
 
         <?php if (!$has_error && !empty($reviews)): ?>
-            <div class="ctr-reviews ctr-<?php echo esc_attr($layout); ?>">
+            <?php $uid = 'ctr-' . uniqid(); ?>
+            <div class="ctr-reviews ctr-<?php echo esc_attr($layout); ?>"
+                 id="<?php echo esc_attr($uid); ?>"
+                 <?php if ($per_page > 0): ?>
+                 data-ctr-per-page="<?php echo esc_attr($per_page); ?>"
+                 data-ctr-total="<?php echo esc_attr(count($reviews)); ?>"
+                 data-ctr-page="0"
+                 <?php endif; ?>>
+
                 <?php if ($layout === 'grid'): ?>
                     <div class="ctr-grid" style="grid-template-columns: repeat(<?php echo esc_attr($columns); ?>, 1fr);">
                         <?php foreach ($reviews as $index => $review): ?>
-                            <?php echo ctr_render_review_card($review, $show_stars, $show_dates, $clickable, $card_style, $index); ?>
+                            <div class="ctr-page-item" data-ctr-item="<?php echo esc_attr($index); ?>"
+                                 <?php if ($per_page > 0 && $index >= $per_page): ?>style="display:none"<?php endif; ?>>
+                                <?php echo ctr_render_review_card($review, $show_stars, $show_dates, $clickable, $card_style, $index); ?>
+                            </div>
                         <?php endforeach; ?>
                     </div>
 
                 <?php elseif ($layout === 'list'): ?>
                     <div class="ctr-list">
                         <?php foreach ($reviews as $index => $review): ?>
-                            <?php echo ctr_render_review_item($review, $show_stars, $show_dates, $clickable, $card_style, $index); ?>
+                            <div class="ctr-page-item" data-ctr-item="<?php echo esc_attr($index); ?>"
+                                 <?php if ($per_page > 0 && $index >= $per_page): ?>style="display:none"<?php endif; ?>>
+                                <?php echo ctr_render_review_item($review, $show_stars, $show_dates, $clickable, $card_style, $index); ?>
+                            </div>
                         <?php endforeach; ?>
                     </div>
 
@@ -114,7 +133,8 @@ function ctr_render_reviews_carousel($atts = array()) {
                 <?php elseif ($layout === 'masonry'): ?>
                     <div class="ctr-masonry" style="columns: <?php echo esc_attr($columns); ?>;">
                         <?php foreach ($reviews as $index => $review): ?>
-                            <div class="ctr-masonry-item">
+                            <div class="ctr-masonry-item ctr-page-item" data-ctr-item="<?php echo esc_attr($index); ?>"
+                                 <?php if ($per_page > 0 && $index >= $per_page): ?>style="display:none"<?php endif; ?>>
                                 <?php echo ctr_render_review_card($review, $show_stars, $show_dates, $clickable, $card_style, $index); ?>
                             </div>
                         <?php endforeach; ?>
@@ -124,7 +144,8 @@ function ctr_render_reviews_carousel($atts = array()) {
                     <div class="ctr-timeline">
                         <div class="ctr-timeline-line"></div>
                         <?php foreach ($reviews as $index => $review): ?>
-                            <div class="ctr-timeline-item">
+                            <div class="ctr-timeline-item ctr-page-item" data-ctr-item="<?php echo esc_attr($index); ?>"
+                                 <?php if ($per_page > 0 && $index >= $per_page): ?>style="display:none"<?php endif; ?>>
                                 <div class="ctr-timeline-marker"></div>
                                 <div class="ctr-timeline-content">
                                     <?php echo ctr_render_review_card($review, $show_stars, $show_dates, $clickable, $card_style, $index); ?>
@@ -133,6 +154,59 @@ function ctr_render_reviews_carousel($atts = array()) {
                         <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
+
+                <?php if ($per_page > 0 && count($reviews) > $per_page): ?>
+                    <div class="ctr-pagination" id="<?php echo esc_attr($uid); ?>-pager">
+                        <button type="button" class="ctr-pager-prev" disabled
+                                aria-label="<?php esc_attr_e('Página anterior', 'custom-trustpilot-reviews'); ?>">
+                            &#8592; <?php esc_html_e('Anterior', 'custom-trustpilot-reviews'); ?>
+                        </button>
+                        <span class="ctr-pager-info">
+                            <?php printf(
+                                esc_html__('Página %1$s de %2$s', 'custom-trustpilot-reviews'),
+                                '<span class="ctr-pager-current">1</span>',
+                                '<span class="ctr-pager-total">' . esc_html(ceil(count($reviews) / $per_page)) . '</span>'
+                            ); ?>
+                        </span>
+                        <button type="button" class="ctr-pager-next"
+                                aria-label="<?php esc_attr_e('Página siguiente', 'custom-trustpilot-reviews'); ?>">
+                            <?php esc_html_e('Siguiente', 'custom-trustpilot-reviews'); ?> &#8594;
+                        </button>
+                    </div>
+                    <script>
+                    (function(){
+                        var wrap    = document.getElementById('<?php echo esc_js($uid); ?>');
+                        var pager   = document.getElementById('<?php echo esc_js($uid); ?>-pager');
+                        var perPage = <?php echo (int) $per_page; ?>;
+                        var total   = <?php echo count($reviews); ?>;
+                        var pages   = Math.ceil(total / perPage);
+                        var current = 0;
+
+                        function showPage(p) {
+                            current = p;
+                            var items = wrap.querySelectorAll('.ctr-page-item');
+                            var start = p * perPage;
+                            var end   = start + perPage;
+                            items.forEach(function(el, i) {
+                                el.style.display = (i >= start && i < end) ? '' : 'none';
+                            });
+                            pager.querySelector('.ctr-pager-current').textContent = p + 1;
+                            pager.querySelector('.ctr-pager-prev').disabled = (p === 0);
+                            pager.querySelector('.ctr-pager-next').disabled = (p >= pages - 1);
+                            // Scroll suave al inicio del bloque
+                            wrap.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+                        }
+
+                        pager.querySelector('.ctr-pager-prev').addEventListener('click', function(){
+                            if (current > 0) showPage(current - 1);
+                        });
+                        pager.querySelector('.ctr-pager-next').addEventListener('click', function(){
+                            if (current < pages - 1) showPage(current + 1);
+                        });
+                    })();
+                    </script>
+                <?php endif; ?>
+
             </div>
         <?php endif; ?>
     </div>

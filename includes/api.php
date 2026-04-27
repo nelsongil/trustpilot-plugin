@@ -4,16 +4,14 @@ if (!defined('ABSPATH')) exit;
 /**
  * Función para obtener reseñas de Trustpilot.
  *
- * Estrategia v2.1:
- *   1. Lee `__NEXT_DATA__` (JSON embebido por Next.js) — método principal.
- *   2. Si la página no incluye `__NEXT_DATA__`, intenta una pasada DOM
- *      como red de seguridad muy laxa (cards genéricas con autor + texto).
- *   3. Si nada funciona, devuelve un error explícito. NUNCA inventa
- *      reseñas a partir de cualquier <p> del documento.
+ * Estrategia v3.0 — GitHub Actions como fetcher:
+ *   Un workflow de GitHub descarga la página de Trustpilot cada 6 horas
+ *   y guarda las reseñas en reviews.json dentro del repo. El plugin lee
+ *   ese JSON desde raw.githubusercontent.com. Así nunca se conecta
+ *   directamente a Trustpilot y evita los bloqueos 403/Cloudflare.
  *
- * Trustpilot sirve hoy un site Next.js detrás de Cloudflare. Las clases
- * CSS llevan sufijos hash que cambian en cada deploy, por eso parsear DOM
- * por clase es frágil. El JSON de `__NEXT_DATA__` es la fuente estable.
+ *   Si el JSON de GitHub falla (primera ejecución, repo privado, etc.),
+ *   intenta como fallback el scraping directo.
  */
 function ctr_get_trustpilot_reviews() {
     $enable_cache   = get_option('ctr_enable_cache', 1);
@@ -23,66 +21,72 @@ function ctr_get_trustpilot_reviews() {
         return $cached_reviews;
     }
 
+    // --- Fuente principal: reviews.json en el repo de GitHub ---
+    $json_url = esc_url_raw(get_option('ctr_github_json_url', ''));
+
+    if (!empty($json_url) && filter_var($json_url, FILTER_VALIDATE_URL)) {
+        $reviews = ctr_fetch_github_json($json_url);
+
+        if (!isset($reviews['error']) && !empty($reviews)) {
+            if ($enable_cache) {
+                $cache_duration = get_option('ctr_cache_duration', 3600);
+                set_transient('ctr_reviews_cache', $reviews, $cache_duration);
+            }
+            return $reviews;
+        }
+
+        error_log('CTR Plugin: GitHub JSON falló, intentando scraping directo. Error: ' . ($reviews['error'] ?? 'desconocido'));
+    }
+
+    // --- Fallback: scraping directo a Trustpilot ---
     $url = esc_url_raw(get_option('ctr_api_url', ''));
 
     if (empty($url) || !filter_var($url, FILTER_VALIDATE_URL)) {
-        $error = __('La URL de Trustpilot no es válida.', 'custom-trustpilot-reviews');
-        error_log('CTR Plugin Error: ' . $error);
-        return ['error' => $error];
+        return ['error' => __('Configura la URL del JSON de GitHub o la URL de Trustpilot.', 'custom-trustpilot-reviews')];
     }
 
-    // Rate limiting (1 petición/min). Solo bloquea si la última fue exitosa.
+    // Rate limiting (1 petición/min)
     $last_request_time = get_transient('ctr_last_request_time');
     $current_time      = time();
 
     if ($last_request_time && ($current_time - $last_request_time) < 60) {
-        if ($cached_reviews !== false) {
-            return $cached_reviews;
-        }
         return ['error' => __('Demasiadas solicitudes. Intenta de nuevo en unos minutos.', 'custom-trustpilot-reviews')];
     }
 
     $response = wp_remote_get($url, [
         'timeout'     => 30,
         'redirection' => 5,
-        'user-agent'  => 'Mozilla/5.0 (compatible; CustomTrustpilotReviews/' . CTR_PLUGIN_VERSION . '; +' . home_url() . ')',
+        'user-agent'  => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
         'headers'     => [
-            'Accept'          => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Language' => 'es-ES,es;q=0.9,en;q=0.5',
-            'Accept-Encoding' => 'identity', // evita gzip si el host de WP no descomprime
-            'Cache-Control'   => 'no-cache',
+            'Accept'                    => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Language'           => 'es-ES,es;q=0.9,en-US;q=0.8,en;q=0.7',
+            'Accept-Encoding'           => 'identity',
+            'Cache-Control'             => 'max-age=0',
+            'Sec-Fetch-Dest'            => 'document',
+            'Sec-Fetch-Mode'            => 'navigate',
+            'Sec-Fetch-Site'            => 'none',
+            'Sec-Fetch-User'            => '?1',
+            'Upgrade-Insecure-Requests' => '1',
         ],
     ]);
 
     if (is_wp_error($response)) {
-        $error = sprintf(__('Error de conexión: %s', 'custom-trustpilot-reviews'), $response->get_error_message());
-        error_log('CTR Plugin Error: ' . $error);
-        return ['error' => $error];
+        return ['error' => sprintf(__('Error de conexión: %s', 'custom-trustpilot-reviews'), $response->get_error_message())];
     }
 
     $response_code = wp_remote_retrieve_response_code($response);
     if ($response_code !== 200) {
-        $error = sprintf(__('Error HTTP %d: No se pudo acceder a la página de Trustpilot.', 'custom-trustpilot-reviews'), $response_code);
-        error_log('CTR Plugin Error: ' . $error);
-        // Marcamos la petición fallida como hecha solo brevemente para no martillar
-        set_transient('ctr_last_request_time', $current_time, 60);
-        return ['error' => $error];
+        if (!in_array($response_code, [403, 429], true)) {
+            set_transient('ctr_last_request_time', $current_time, 60);
+        }
+        return ['error' => sprintf(__('Error HTTP %d al acceder a Trustpilot.', 'custom-trustpilot-reviews'), $response_code)];
     }
 
-    $html = wp_remote_retrieve_body($response);
-    if (empty($html)) {
-        $error = __('La respuesta de Trustpilot está vacía.', 'custom-trustpilot-reviews');
-        error_log('CTR Plugin Error: ' . $error);
-        return ['error' => $error];
-    }
-
-    // Marca la petición como exitosa para el rate limiter
     set_transient('ctr_last_request_time', $current_time, 60);
 
-    // Parser principal: __NEXT_DATA__ JSON
+    $html    = wp_remote_retrieve_body($response);
     $reviews = ctr_parse_trustpilot_next_data($html, $url);
 
-    // Solo si __NEXT_DATA__ falla, intenta DOM como red de seguridad
     if (isset($reviews['error'])) {
         $dom_reviews = ctr_parse_trustpilot_dom($html, $url);
         if (!isset($dom_reviews['error']) && !empty($dom_reviews)) {
@@ -91,11 +95,41 @@ function ctr_get_trustpilot_reviews() {
     }
 
     if ($enable_cache && !isset($reviews['error']) && !empty($reviews)) {
-        $cache_duration = get_option('ctr_cache_duration', 3600);
-        set_transient('ctr_reviews_cache', $reviews, $cache_duration);
+        set_transient('ctr_reviews_cache', $reviews, get_option('ctr_cache_duration', 3600));
     }
 
     return $reviews;
+}
+
+/**
+ * Lee el reviews.json generado por GitHub Actions.
+ * La URL debe apuntar al raw del archivo en el repo:
+ * https://raw.githubusercontent.com/nelsongil/trustpilot-plugin/main/reviews.json
+ */
+function ctr_fetch_github_json($json_url) {
+    $response = wp_remote_get($json_url, [
+        'timeout'    => 15,
+        'user-agent' => 'WordPress/' . get_bloginfo('version'),
+        'headers'    => ['Accept' => 'application/json'],
+    ]);
+
+    if (is_wp_error($response)) {
+        return ['error' => $response->get_error_message()];
+    }
+
+    $code = wp_remote_retrieve_response_code($response);
+    if ($code !== 200) {
+        return ['error' => "HTTP $code al leer reviews.json de GitHub"];
+    }
+
+    $body = wp_remote_retrieve_body($response);
+    $data = json_decode($body, true);
+
+    if (json_last_error() !== JSON_ERROR_NONE || empty($data['reviews'])) {
+        return ['error' => 'JSON inválido o vacío en reviews.json'];
+    }
+
+    return $data['reviews'];
 }
 
 /**

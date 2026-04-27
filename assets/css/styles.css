@@ -929,3 +929,43 @@
         scrollbar-width: thin;
     }
 }
+/* ============================================================
+   PAGINACIÓN CLIENT-SIDE
+   ============================================================ */
+.ctr-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+}
+
+.ctr-pager-prev,
+.ctr-pager-next {
+    background: #00b67a;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 18px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.2s, opacity 0.2s;
+    font-family: inherit;
+}
+
+.ctr-pager-prev:hover:not(:disabled),
+.ctr-pager-next:hover:not(:disabled) {
+    background: #007a52;
+}
+
+.ctr-pager-prev:disabled,
+.ctr-pager-next:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.ctr-pager-info {
+    font-size: 14px;
+    color: #555;
+}

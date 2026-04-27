@@ -11,8 +11,9 @@ function ctr_settings_page() {
     if (isset($_POST['ctr_save_settings']) && check_admin_referer('ctr_settings_nonce', 'ctr_nonce')) {
         
         // Validate and sanitize inputs
-        $api_url = esc_url_raw($_POST['ctr_api_url']);
-        $reviews_count = absint($_POST['ctr_reviews_count']);
+        $api_url         = esc_url_raw($_POST['ctr_api_url']);
+        $github_json_url = esc_url_raw($_POST['ctr_github_json_url'] ?? '');
+        $reviews_count   = absint($_POST['ctr_reviews_count']);
         $reviews_title = sanitize_text_field($_POST['ctr_reviews_title']);
         $cache_duration = absint($_POST['ctr_cache_duration']);
         $enable_cache = isset($_POST['ctr_enable_cache']) ? 1 : 0;
@@ -50,6 +51,7 @@ function ctr_settings_page() {
         
         // Update options
         update_option('ctr_api_url', $api_url);
+        update_option('ctr_github_json_url', $github_json_url);
         update_option('ctr_reviews_count', $reviews_count);
         update_option('ctr_reviews_title', $reviews_title);
         update_option('ctr_cache_duration', $cache_duration);
@@ -80,8 +82,9 @@ function ctr_settings_page() {
     }
 
     // Get current options
-    $api_url = get_option('ctr_api_url', '');
-    $reviews_count = get_option('ctr_reviews_count', 5);
+    $api_url         = get_option('ctr_api_url', '');
+    $github_json_url = get_option('ctr_github_json_url', '');
+    $reviews_count   = get_option('ctr_reviews_count', 5);
     $reviews_title = get_option('ctr_reviews_title', 'Valoraciones de Trustpilot');
     $cache_duration = get_option('ctr_cache_duration', 3600);
     $enable_cache = get_option('ctr_enable_cache', 1);
@@ -121,18 +124,36 @@ function ctr_settings_page() {
                 <table class="form-table">
                     <tr>
                         <th scope="row">
-                            <label for="ctr_api_url"><?php _e('URL de Trustpilot:', 'custom-trustpilot-reviews'); ?></label>
+                            <label for="ctr_github_json_url"><?php _e('URL del JSON de GitHub (recomendado):', 'custom-trustpilot-reviews'); ?></label>
                         </th>
                         <td>
-                            <input type="url" 
-                                   id="ctr_api_url"
-                                   name="ctr_api_url" 
-                                   value="<?php echo esc_attr($api_url); ?>" 
+                            <input type="url"
+                                   id="ctr_github_json_url"
+                                   name="ctr_github_json_url"
+                                   value="<?php echo esc_attr($github_json_url); ?>"
                                    class="regular-text"
-                                   placeholder="https://es.trustpilot.com/review/example.com"
-                                   required>
+                                   placeholder="https://raw.githubusercontent.com/nelsongil/trustpilot-plugin/main/reviews.json">
                             <p class="description">
-                                <?php _e('Ingresa la URL de la página de reseñas de Trustpilot de tu empresa.', 'custom-trustpilot-reviews'); ?>
+                                <?php _e('URL del archivo reviews.json generado por GitHub Actions. Evita los bloqueos 403 de Trustpilot.', 'custom-trustpilot-reviews'); ?>
+                                <br><strong><?php _e('Formato:', 'custom-trustpilot-reviews'); ?></strong>
+                                <code>https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/reviews.json</code>
+                            </p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th scope="row">
+                            <label for="ctr_api_url"><?php _e('URL de Trustpilot (fallback):', 'custom-trustpilot-reviews'); ?></label>
+                        </th>
+                        <td>
+                            <input type="url"
+                                   id="ctr_api_url"
+                                   name="ctr_api_url"
+                                   value="<?php echo esc_attr($api_url); ?>"
+                                   class="regular-text"
+                                   placeholder="https://es.trustpilot.com/review/example.com">
+                            <p class="description">
+                                <?php _e('Solo se usa si el JSON de GitHub no está disponible.', 'custom-trustpilot-reviews'); ?>
                             </p>
                         </td>
                     </tr>

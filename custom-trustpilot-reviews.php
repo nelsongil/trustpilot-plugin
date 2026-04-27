@@ -113,20 +113,6 @@ function ctr_deactivate_plugin() {
     wp_clear_scheduled_hook('ctr_check_for_updates');
     // Limpia cron heredado por si quedó de versiones anteriores
     wp_clear_scheduled_hook('ctr_clear_cache');
-
-    // Limpia transientes
-    delete_transient('ctr_reviews_cache');
-    delete_transient('ctr_last_request_time');
-    delete_transient('ctr_latest_version_info');
-    delete_transient('ctr_last_update_check');
-    delete_transient('ctr_update_available');
-}
-
-// Add settings link to plugins page
-add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'ctr_add_settings_link');
-
-function ctr_add_settings_link($links) {
-    $settings_link = '<a href="' . admin_url('admin.php?page=ctr-settings') . '">' . __('Configuración', 'custom-trustpilot-reviews') . '</a>';
-    array_unshift($links, $settings_link);
-    return $links;
+    // Limpia la caché de reseñas
+    ctr_clear_reviews_cache();
 }

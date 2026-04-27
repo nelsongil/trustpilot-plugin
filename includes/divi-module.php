@@ -29,6 +29,15 @@ class Ctr_Trustpilot_Module extends ET_Builder_Module {
                 'min'             => 1,
                 'max'             => 50,
             ),
+            'per_page' => array(
+                'label'           => esc_html__('Reseñas por página', 'custom-trustpilot-reviews'),
+                'type'            => 'number',
+                'default'         => 0,
+                'option_category' => 'basic_option',
+                'description'     => esc_html__('Paginar las reseñas. 0 = mostrar todas sin paginación.', 'custom-trustpilot-reviews'),
+                'min'             => 0,
+                'max'             => 50,
+            ),
             'layout' => array(
                 'label'           => esc_html__('Diseño', 'custom-trustpilot-reviews'),
                 'type'            => 'select',
@@ -87,6 +96,10 @@ class Ctr_Trustpilot_Module extends ET_Builder_Module {
                 'type'            => 'yes_no_button',
                 'default'         => 'on',
                 'option_category' => 'basic_option',
+                'options'         => array(
+                    'on'  => esc_html__('Sí', 'custom-trustpilot-reviews'),
+                    'off' => esc_html__('No', 'custom-trustpilot-reviews'),
+                ),
                 'description'     => esc_html__('Mostrar las estrellas de valoración.', 'custom-trustpilot-reviews'),
             ),
             'show_dates' => array(
@@ -94,6 +107,10 @@ class Ctr_Trustpilot_Module extends ET_Builder_Module {
                 'type'            => 'yes_no_button',
                 'default'         => 'on',
                 'option_category' => 'basic_option',
+                'options'         => array(
+                    'on'  => esc_html__('Sí', 'custom-trustpilot-reviews'),
+                    'off' => esc_html__('No', 'custom-trustpilot-reviews'),
+                ),
                 'description'     => esc_html__('Mostrar la fecha de la reseña.', 'custom-trustpilot-reviews'),
             ),
             'clickable_reviews' => array(
@@ -101,6 +118,10 @@ class Ctr_Trustpilot_Module extends ET_Builder_Module {
                 'type'            => 'yes_no_button',
                 'default'         => 'on',
                 'option_category' => 'basic_option',
+                'options'         => array(
+                    'on'  => esc_html__('Sí', 'custom-trustpilot-reviews'),
+                    'off' => esc_html__('No', 'custom-trustpilot-reviews'),
+                ),
                 'description'     => esc_html__('Hacer que la reseña lleve a Trustpilot al hacer clic.', 'custom-trustpilot-reviews'),
             ),
             'show_button' => array(
@@ -108,6 +129,10 @@ class Ctr_Trustpilot_Module extends ET_Builder_Module {
                 'type'            => 'yes_no_button',
                 'default'         => 'on',
                 'option_category' => 'basic_option',
+                'options'         => array(
+                    'on'  => esc_html__('Sí', 'custom-trustpilot-reviews'),
+                    'off' => esc_html__('No', 'custom-trustpilot-reviews'),
+                ),
                 'description'     => esc_html__('Mostrar el botón superior para valorar en Trustpilot.', 'custom-trustpilot-reviews'),
             ),
             'button_text' => array(
@@ -138,6 +163,19 @@ class Ctr_Trustpilot_Module extends ET_Builder_Module {
      * sitio.
      */
     public function render($attrs, $content = null, $render_slug = '') {
+        // En el Visual Builder mostramos un placeholder para no disparar la API
+        // con cada cambio de opción (evita el rate limiting de Trustpilot).
+        if (function_exists('et_fb_is_enabled') && et_fb_is_enabled()) {
+            $preview_count = absint($this->props['reviews_count']);
+            $preview_layout = sanitize_text_field($this->props['layout']);
+            return '<div style="padding:24px;background:#f0fdf4;border:2px dashed #00b67a;border-radius:8px;text-align:center;font-family:sans-serif;">
+                <img src="' . esc_url(CTR_PLUGIN_URL . 'assets/img/trustpilotlogo.png') . '" alt="Trustpilot" style="height:28px;margin-bottom:10px;"><br>
+                <strong style="color:#00b67a;font-size:15px;">Módulo Trustpilot Reviews</strong><br>
+                <span style="color:#555;font-size:13px;">Layout: <em>' . esc_html($preview_layout) . '</em> · ' . esc_html($preview_count) . ' reseñas</span><br>
+                <span style="color:#888;font-size:12px;margin-top:6px;display:block;">Las reseñas reales se muestran en el frontend (no en el editor).</span>
+            </div>';
+        }
+
         // Mapeo Divi → atributos del shortcode
         $count       = absint($this->props['reviews_count']);
         if ($count < 1 || $count > 50) $count = 5;
@@ -149,8 +187,11 @@ class Ctr_Trustpilot_Module extends ET_Builder_Module {
         $allowed     = ['grid', 'list', 'carousel', 'masonry', 'timeline'];
         if (!in_array($layout, $allowed, true)) $layout = 'grid';
 
+        $per_page = absint($this->props['per_page']);
+
         $atts = array(
             'count'       => $count,
+            'per_page'    => $per_page,
             'title'       => $this->props['title'],
             'show_button' => $this->props['show_button'] === 'on' ? 'true' : 'false',
             'button_text' => $this->props['button_text'],
@@ -168,5 +209,6 @@ class Ctr_Trustpilot_Module extends ET_Builder_Module {
     }
 }
 
-// Initialize the module
+// Este archivo se incluye dentro del hook et_builder_ready (en custom-trustpilot-reviews.php),
+// así que instanciamos directamente sin añadir otro hook.
 new Ctr_Trustpilot_Module();

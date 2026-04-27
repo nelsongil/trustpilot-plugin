@@ -355,12 +355,10 @@ function ctr_get_update_info() {
                 'has_update' => true,
                 'current_version' => $current_version,
                 'new_version' => $new_version,
-                'update_url' => admin_url('plugins.php?action=upgrade-plugin&plugin=' . CTR_PLUGIN_BASENAME),
-                'changelog' => $update_info['changelog'] ?? '',
-                'published_at' => $update_info['published_at'] ?? ''
+                'update_url' => admin_url('plugins.php?action=upgrade-plugin&plugin=' . urlencode(CTR_PLUGIN_BASENAME)),
             );
         }
     }
-    
+
     return array('has_update' => false);
 }
