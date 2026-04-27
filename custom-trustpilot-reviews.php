@@ -105,6 +105,18 @@ function ctr_activate_plugin() {
     if (false === get_option('ctr_auto_update_enabled', false)) update_option('ctr_auto_update_enabled', 1);
 }
 
+// Handler para el toggle de actualizaciones automáticas
+add_action('admin_post_ctr_toggle_auto_update', function() {
+    if (!current_user_can('update_plugins')) {
+        wp_die(__('Sin permisos.', 'custom-trustpilot-reviews'));
+    }
+    check_admin_referer('ctr_toggle_auto_update');
+    $value = isset($_GET['value']) && $_GET['value'] === 'enable' ? 1 : 0;
+    update_option('ctr_auto_update_enabled', $value);
+    wp_redirect(admin_url('plugins.php'));
+    exit;
+});
+
 // Deactivation hook
 register_deactivation_hook(__FILE__, 'ctr_deactivate_plugin');
 

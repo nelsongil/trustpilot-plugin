@@ -23,7 +23,11 @@ class CTR_Plugin_Updater {
         add_filter('upgrader_post_install', array($this, 'post_install'), 10, 3);
         add_action('admin_init', array($this, 'force_update_check'));
         add_action('ctr_check_for_updates', array($this, 'scheduled_update_check'));
-        
+
+        // Toggle "Activar actualizaciones automáticas" en la lista de plugins
+        add_filter('plugin_auto_update_setting_html', array($this, 'auto_update_setting_html'), 10, 3);
+        add_filter('auto_update_plugin', array($this, 'maybe_auto_update'), 10, 2);
+
         // Inicializar verificación de actualizaciones
         $this->init_update_check();
     }
@@ -319,6 +323,47 @@ class CTR_Plugin_Updater {
         }
         
         return array('compatible' => true);
+    }
+
+    /**
+     * Muestra el toggle "Activar/Desactivar actualizaciones automáticas"
+     * en la lista de plugins de WordPress (igual que los plugins de .org).
+     */
+    public function auto_update_setting_html($html, $plugin_file, $plugin_data) {
+        if ($plugin_file !== $this->plugin_basename) {
+            return $html;
+        }
+
+        $enabled = get_option('ctr_auto_update_enabled', 1);
+        $nonce   = wp_create_nonce('ctr_toggle_auto_update');
+
+        if ($enabled) {
+            $label  = __('Desactivar actualizaciones automáticas', 'custom-trustpilot-reviews');
+            $action = 'disable';
+            $icon   = '&#10003; ';
+        } else {
+            $label  = __('Activar actualizaciones automáticas', 'custom-trustpilot-reviews');
+            $action = 'enable';
+            $icon   = '';
+        }
+
+        $url = add_query_arg(array(
+            'action'   => 'ctr_toggle_auto_update',
+            'value'    => $action,
+            '_wpnonce' => $nonce,
+        ), admin_url('admin-post.php'));
+
+        return $icon . '<a href="' . esc_url($url) . '">' . esc_html($label) . '</a>';
+    }
+
+    /**
+     * Aplica la actualización automática cuando WordPress lo decide.
+     */
+    public function maybe_auto_update($update, $item) {
+        if (isset($item->plugin) && $item->plugin === $this->plugin_basename) {
+            return (bool) get_option('ctr_auto_update_enabled', 1);
+        }
+        return $update;
     }
 }
 
