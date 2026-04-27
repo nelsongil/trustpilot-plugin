@@ -1,0 +1,84 @@
+name: 🐛 Bug report
+description: Reportar un fallo del plugin (reviews que no aparecen, error PHP, layout roto...).
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por reportar. Cuanta más info nos des, antes lo arreglamos.
+
+  - type: input
+    id: plugin_version
+    attributes:
+      label: Versión del plugin
+      description: La encuentras en WP-Admin → Plugins (o en `custom-trustpilot-reviews.php`).
+      placeholder: "2.1"
+    validations:
+      required: true
+
+  - type: input
+    id: wp_version
+    attributes:
+      label: Versión de WordPress
+      placeholder: "6.4.3"
+    validations:
+      required: true
+
+  - type: input
+    id: php_version
+    attributes:
+      label: Versión de PHP
+      placeholder: "8.1"
+    validations:
+      required: true
+
+  - type: input
+    id: trustpilot_url
+    attributes:
+      label: URL de Trustpilot configurada
+      placeholder: "https://es.trustpilot.com/review/midominio.com"
+    validations:
+      required: true
+
+  - type: textarea
+    id: what_happened
+    attributes:
+      label: ¿Qué ha pasado?
+      description: Qué esperabas y qué ha ocurrido en su lugar.
+      placeholder: |
+        En la home se mostraban 5 reseñas y desde ayer aparece "No se encontró __NEXT_DATA__ en la respuesta de Trustpilot".
+    validations:
+      required: true
+
+  - type: textarea
+    id: error_log
+    attributes:
+      label: Error log de WordPress
+      description: Pega cualquier línea con `CTR Plugin Error` que veas en `wp-content/debug.log` (si tienes `WP_DEBUG_LOG` activo).
+      render: shell
+
+  - type: textarea
+    id: shortcode
+    attributes:
+      label: Shortcode / módulo Divi usado
+      placeholder: "[custom_trustpilot_reviews layout=\"grid\" count=\"5\"]"
+
+  - type: dropdown
+    id: divi
+    attributes:
+      label: ¿Usas Divi?
+      options:
+        - "Sí, módulo Divi"
+        - "Sí pero con shortcode"
+        - "No, otro tema"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: tried
+    attributes:
+      label: Cosas que ya he probado
+      options:
+        - label: Limpiar la caché del plugin (Settings → Avanzado)
+        - label: Desactivar y reactivar el plugin
+        - label: Probar la URL de Trustpilot a mano en el navegador

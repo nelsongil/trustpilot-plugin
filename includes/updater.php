@@ -81,17 +81,22 @@ class CTR_Plugin_Updater {
      * Verificar actualizaciones disponibles
      */
     public function check_for_updates($transient = null) {
-        if (empty($transient)) {
-            $transient = get_site_transient('update_plugins');
+        // WordPress nos puede pasar false en la primera ejecución del filter.
+        // Garantizamos siempre un objeto con ->response para no petar.
+        if (!is_object($transient)) {
+            $transient = new stdClass();
         }
-        
+        if (!isset($transient->response) || !is_array($transient->response)) {
+            $transient->response = array();
+        }
+
         // Obtener información de la última versión
         $update_info = $this->get_latest_version_info();
-        
+
         if ($update_info && !empty($update_info['version'])) {
             $current_version = CTR_PLUGIN_VERSION;
             $new_version = $update_info['version'];
-            
+
             // Verificar si hay una nueva versión
             if (version_compare($new_version, $current_version, '>')) {
                 // Preparar objeto de actualización

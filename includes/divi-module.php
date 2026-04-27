@@ -6,8 +6,8 @@ class Ctr_Trustpilot_Module extends ET_Builder_Module {
     public $vb_support = 'on';
 
     function init() {
-        $this->name = esc_html__('Trustpilot Reviews', 'custom-trustpilot-reviews');
-        $this->icon = 'j';
+        $this->name             = esc_html__('Trustpilot Reviews', 'custom-trustpilot-reviews');
+        $this->icon             = 'j';
         $this->main_css_element = '%%order_class%%';
     }
 
@@ -132,168 +132,39 @@ class Ctr_Trustpilot_Module extends ET_Builder_Module {
         );
     }
 
-    public function render($attrs, $content = null, $render_slug) {
-        $title         = $this->props['title'];
-        $reviews_count = absint($this->props['reviews_count']);
-        $layout        = $this->props['layout'];
-        $columns       = absint($this->props['columns']);
-        $card_style    = $this->props['card_style'];
-        $color_scheme  = $this->props['color_scheme'];
-        $show_stars    = $this->props['show_stars'] === 'on';
-        $show_dates    = $this->props['show_dates'] === 'on';
-        $clickable     = $this->props['clickable_reviews'] === 'on';
-        $show_button   = $this->props['show_button'];
-        $button_text   = $this->props['button_text'];
-        $button_url    = $this->props['button_url'];
-        
-        // Validate inputs
-        if ($reviews_count < 1 || $reviews_count > 50) {
-            $reviews_count = 5;
-        }
-        if (!in_array($layout, ['grid', 'list', 'carousel', 'masonry', 'timeline'])) {
-            $layout = 'grid';
-        }
-        if ($columns < 1 || $columns > 4) {
-            $columns = 1;
-        }
-        
-        // Get reviews using the plugin's function
-        $reviews = ctr_get_trustpilot_reviews();
-        
-        // Generate unique ID for this instance
-        $module_id = 'ctr-carousel-' . uniqid();
-        
-        // Start output buffering
-        ob_start();
-        ?>
-        <div class="ctr-carousel ctr-divi-module ctr-layout-<?php echo esc_attr($layout); ?> ctr-style-<?php echo esc_attr($card_style); ?> ctr-colors-<?php echo esc_attr($color_scheme); ?>">
-            <?php if (!empty($title)): ?>
-                <h2 class="ctr-title">
-                    <?php echo esc_html($title); ?>
-                    <img src="<?php echo esc_url(CTR_PLUGIN_URL . 'assets/img/trustpilotlogo.png'); ?>" alt="Trustpilot">
-                </h2>
-            <?php endif; ?>
-            
-            <?php if ($show_button === 'on'): ?>
-                <div class="ctr-button-container">
-                    <a href="<?php echo esc_url($button_url); ?>" 
-                       target="_blank" 
-                       rel="noopener noreferrer" 
-                       class="ctr-button">
-                        <?php echo esc_html($button_text); ?>
-                    </a>
-                </div>
-            <?php endif; ?>
-            
-            <?php if (!empty($reviews) && !isset($reviews['error'])): ?>
-                <?php 
-                $reviews = array_slice($reviews, 0, $reviews_count);
-                ?>
-                
-                <div class="ctr-reviews ctr-<?php echo esc_attr($layout); ?>">
-                    <?php if ($layout === 'grid'): ?>
-                        <div class="ctr-grid" style="grid-template-columns: repeat(<?php echo esc_attr($columns); ?>, 1fr);">
-                            <?php foreach ($reviews as $index => $review): ?>
-                                <div class="ctr-review-card <?php echo $clickable ? 'ctr-clickable' : ''; ?>" 
-                                     <?php if ($clickable && !empty($review['review_url'])) echo 'onclick="window.open(\'' . esc_url($review['review_url']) . '\', \'_blank\')"'; ?>>
-                                    <?php echo ctr_render_review_content($review, $show_stars, $show_dates, $clickable, $card_style, $index); ?>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                        
-                    <?php elseif ($layout === 'list'): ?>
-                        <div class="ctr-list">
-                            <?php foreach ($reviews as $index => $review): ?>
-                                <div class="ctr-review-item <?php echo $clickable ? 'ctr-clickable' : ''; ?>"
-                                     <?php if ($clickable && !empty($review['review_url'])) echo 'onclick="window.open(\'' . esc_url($review['review_url']) . '\', \'_blank\')"'; ?>>
-                                    <?php echo ctr_render_review_content($review, $show_stars, $show_dates, $clickable, $card_style, $index); ?>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                        
-                    <?php elseif ($layout === 'masonry'): ?>
-                        <div class="ctr-masonry" style="columns: <?php echo esc_attr($columns); ?>;">
-                            <?php foreach ($reviews as $index => $review): ?>
-                                <div class="ctr-masonry-item">
-                                    <div class="ctr-review-card <?php echo $clickable ? 'ctr-clickable' : ''; ?>"
-                                         <?php if ($clickable && !empty($review['review_url'])) echo 'onclick="window.open(\'' . esc_url($review['review_url']) . '\', \'_blank\')"'; ?>>
-                                        <?php echo ctr_render_review_content($review, $show_stars, $show_dates, $clickable, $card_style, $index); ?>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
+    /**
+     * Render delega TODO en el shortcode central. Así no tenemos dos
+     * implementaciones HTML divergentes y los cambios de UI van en un único
+     * sitio.
+     */
+    public function render($attrs, $content = null, $render_slug = '') {
+        // Mapeo Divi → atributos del shortcode
+        $count       = absint($this->props['reviews_count']);
+        if ($count < 1 || $count > 50) $count = 5;
 
-                    <?php elseif ($layout === 'timeline'): ?>
-                        <div class="ctr-timeline">
-                            <div class="ctr-timeline-line"></div>
-                            <?php foreach ($reviews as $index => $review): ?>
-                                <div class="ctr-timeline-item">
-                                    <div class="ctr-timeline-marker"></div>
-                                    <div class="ctr-timeline-content">
-                                        <div class="ctr-review-card <?php echo $clickable ? 'ctr-clickable' : ''; ?>"
-                                             <?php if ($clickable && !empty($review['review_url'])) echo 'onclick="window.open(\'' . esc_url($review['review_url']) . '\', \'_blank\')"'; ?>>
-                                            <?php echo ctr_render_review_content($review, $show_stars, $show_dates, $clickable, $card_style, $index); ?>
-                                        </div>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
+        $columns     = absint($this->props['columns']);
+        if ($columns < 1 || $columns > 4) $columns = 1;
 
-                    <?php else: // carousel layout ?>
-                        <div class="ctr-carousel-container" id="<?php echo esc_attr($module_id); ?>">
-                            <?php if (count($reviews) > 1): ?>
-                                <button class="ctr-prev" aria-label="<?php esc_attr_e('Anterior', 'custom-trustpilot-reviews'); ?>">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                                </button>
-                            <?php endif; ?>
-                            <div class="ctr-carousel-slides">
-                                <?php foreach ($reviews as $index => $review): ?>
-                                    <div class="ctr-review-slide" data-slide="<?php echo esc_attr($index); ?>">
-                                        <?php echo ctr_render_review_content($review, $show_stars, $show_dates, $clickable, $card_style, $index); ?>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                            
-                            <?php if (count($reviews) > 1): ?>
-                                <button class="ctr-next" aria-label="<?php esc_attr_e('Siguiente', 'custom-trustpilot-reviews'); ?>">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                                </button>
-                            <?php endif; ?>
-                        </div>
-                    <?php endif; ?>
-                </div>
-                
-            <?php else: ?>
-                <p class="ctr-error">
-                    <?php echo esc_html($reviews['error'] ?? __('No hay reseñas disponibles en este momento.', 'custom-trustpilot-reviews')); ?>
-                </p>
-            <?php endif; ?>
-        </div>
-        
-        <?php if ($layout === 'carousel' && count($reviews) > 1): ?>
-            <script>
-            (function($) {
-                var containerId = '<?php echo esc_js($module_id); ?>';
-                var $container = $('#' + containerId);
-                var $slides = $container.find('.ctr-carousel-slides');
-                var count = $slides.find('.ctr-review-slide').length;
-                var current = 0;
-                
-                $container.find('.ctr-next').on('click', function() {
-                    current = (current + 1) % count;
-                    $slides.css('transform', 'translateX(-' + (current * 100) + '%)');
-                });
-                
-                $container.find('.ctr-prev').on('click', function() {
-                    current = (current - 1 + count) % count;
-                    $slides.css('transform', 'translateX(-' + (current * 100) + '%)');
-                });
-            })(jQuery);
-            </script>
-        <?php endif; ?>
-        
-        <?php
-        return ob_get_clean();
+        $layout      = $this->props['layout'];
+        $allowed     = ['grid', 'list', 'carousel', 'masonry', 'timeline'];
+        if (!in_array($layout, $allowed, true)) $layout = 'grid';
+
+        $atts = array(
+            'count'       => $count,
+            'title'       => $this->props['title'],
+            'show_button' => $this->props['show_button'] === 'on' ? 'true' : 'false',
+            'button_text' => $this->props['button_text'],
+            'button_url'  => $this->props['button_url'],
+            'layout'      => $layout,
+            'columns'     => $columns,
+            'show_stars'  => $this->props['show_stars']        === 'on' ? 'true' : 'false',
+            'show_dates'  => $this->props['show_dates']        === 'on' ? 'true' : 'false',
+            'clickable'   => $this->props['clickable_reviews'] === 'on' ? 'true' : 'false',
+            'style'       => $this->props['card_style'],
+            'colors'      => $this->props['color_scheme'],
+        );
+
+        return ctr_render_reviews_carousel($atts);
     }
 }
 

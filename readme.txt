@@ -4,7 +4,7 @@ Tags: Trustpilot, reviews, Divi, ratings, carousel, grid, cache, stars, masonry,
 Requires at least: 5.6
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 1.7
+Stable tag: 2.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -73,6 +73,23 @@ Dispones de 5 estilos: Moderno, Clásico, Minimalista, Elegante y Audaz, cada un
 3. assets/img/trustpilotlogo.png - Logo de Trustpilot
 
 == Changelog ==
+= 2.1 =
+* 🚑 **Fix crítico**: el scraping HTML rompía con la nueva versión de Trustpilot (Next.js + clases CSS con hash). Ahora se lee directamente el JSON de `__NEXT_DATA__`, mucho más estable.
+* 🧹 Eliminado el fallback peligroso que mostraba párrafos genéricos como "Reseñas de Cliente Anónimo" con 5 estrellas falsas.
+* 🛡️ Guardas defensivas en el módulo Divi: si la API falla ya no se renderiza tarjeta basura ni el botón sobre el error.
+* ♿ Reseñas clickeables ahora son `<a>` reales (accesibles por teclado, indexables por SEO) en vez de `onclick="window.open(...)"`.
+* ⚡ JS del carrusel extraído a `assets/js/ctr-carousel.js` y sin dependencia de jQuery.
+* 🔧 Updater: arreglado fallo cuando WordPress pasaba `false` como transient.
+* 🧽 Limpieza al desactivar: cron correcto + transientes borrados.
+* 🛠️ Firma de `render()` compatible con PHP 8+.
+* 🔁 Fetch a Trustpilot con `Accept-Encoding: identity` y User-Agent del propio sitio (menos probabilidad de challenge de Cloudflare).
+* 📁 `.gitignore` y `.gitattributes` añadidos para evitar diff fantasma de finales de línea.
+
+= 2.0 =
+* Sistema de auto-actualización vía GitHub Releases.
+* Fix nombres de autor.
+* Fix flechas del carrusel.
+
 = 1.7 =
 * ⭐ Sistema de estrellas de valoración automático
 * 🔗 Reseñas clickeables con enlaces a Trustpilot
@@ -104,6 +121,9 @@ Dispones de 5 estilos: Moderno, Clásico, Minimalista, Elegante y Audaz, cada un
 * Versión inicial del plugin
 
 == Upgrade Notice ==
+= 2.1 =
+Versión recomendada urgentemente: arregla el fallo de extracción de reseñas tras los últimos cambios de Trustpilot y elimina un fallback que podía mostrar texto genérico con valoraciones falsas.
+
 = 1.7 =
 Esta versión incluye las estrellas de valoración, reseñas clickeables, nuevos layouts (Masonry y Timeline), y un sistema completo de personalización visual. ¡Actualiza para obtener la mejor experiencia!
 
