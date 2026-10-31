@@ -8,6 +8,17 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es/1.1.0/) y el v
 
 ---
 
+## [2.2] — 2026-10-31
+
+### Added
+- **Compatibilidad con Divi 5**: el plugin ya no carga el módulo clásico `ET_Builder_Module` cuando detecta Divi 5, porque el builder nuevo no admite módulos clásicos de terceros. En Divi 5 se usa el shortcode `[custom_trustpilot_reviews]` dentro de un módulo de código.
+- Alias `[ctr_trustpilot_module]` para los bloques `divi/shortcode-module` que Divi 5 genera al convertir el módulo clásico.
+
+### Changed
+- El módulo clásico sigue disponible y sin cambios en Divi 4.
+
+---
+
 ## [2.1] — 2026-04-26
 
 ### Fixed

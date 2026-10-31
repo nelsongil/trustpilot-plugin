@@ -19,22 +19,15 @@ jobs:
 
       - name: Actualizar versión en plugin PHP
         run: |
-          sed -i "s/Version: .*/Version: ${{ steps.version.outputs.VERSION }}/" "Trustpilot Reviews/custom-trustpilot-reviews.php"
-          sed -i "s/define('CTR_PLUGIN_VERSION', '.*')/define('CTR_PLUGIN_VERSION', '${{ steps.version.outputs.VERSION }}')/" "Trustpilot Reviews/custom-trustpilot-reviews.php"
+          sed -i "s/Version: .*/Version: ${{ steps.version.outputs.VERSION }}/" "custom-trustpilot-reviews.php"
+          sed -i "s/define('CTR_PLUGIN_VERSION', '.*')/define('CTR_PLUGIN_VERSION', '${{ steps.version.outputs.VERSION }}')/" "custom-trustpilot-reviews.php"
 
       - name: Crear ZIP del plugin
         run: |
-          cd "Trustpilot Reviews"
-          zip -r "../trustpilot-reviews-${{ steps.version.outputs.VERSION }}.zip" \
-            custom-trustpilot-reviews.php \
-            readme.txt \
-            LICENSE \
-            CHANGELOG.md \
-            README.md \
-            assets/ \
-            includes/ \
-            --exclude "*.zip" \
-            --exclude ".git*"
+          mkdir -p /tmp/custom-trustpilot-reviews
+          cp -R custom-trustpilot-reviews.php readme.txt LICENSE CHANGELOG.md README.md assets includes /tmp/custom-trustpilot-reviews/
+          cd /tmp
+          zip -r "$GITHUB_WORKSPACE/trustpilot-reviews-${{ steps.version.outputs.VERSION }}.zip" custom-trustpilot-reviews
 
       - name: Crear GitHub Release y subir ZIP
         uses: softprops/action-gh-release@v2

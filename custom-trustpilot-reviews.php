@@ -2,7 +2,7 @@
 /*
 Plugin Name: Custom Trustpilot Reviews
 Description: Muestra las valoraciones de Trustpilot en WordPress y Divi con un diseño personalizable.
-Version: 2.1
+Version: 2.2
 Author: Nelson Ariel Gil Olguin
 Text Domain: custom-trustpilot-reviews
 Requires at least: 5.6
@@ -14,7 +14,7 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 if (!defined('ABSPATH')) exit;
 
 // Define plugin constants
-define('CTR_PLUGIN_VERSION', '2.1');
+define('CTR_PLUGIN_VERSION', '2.2');
 define('CTR_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('CTR_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('CTR_PLUGIN_SLUG', 'custom-trustpilot-reviews');
@@ -66,11 +66,28 @@ function ctr_enqueue_assets() {
 }
 add_action('wp_enqueue_scripts', 'ctr_enqueue_assets');
 
-// Registro del módulo de Divi
+/**
+ * Registro del módulo clásico de Divi.
+ *
+ * Divi 5 conserva ET_Builder_Module por compatibilidad, pero su builder nuevo
+ * no admite módulos clásicos de terceros. En Divi 5 el plugin se usa con el
+ * shortcode [custom_trustpilot_reviews] dentro de un módulo de código.
+ */
 function ctr_register_divi_module() {
-    if (class_exists('ET_Builder_Module')) {
-        require_once CTR_PLUGIN_PATH . 'includes/divi-module.php';
+    if (!class_exists('ET_Builder_Module')) {
+        return;
     }
+
+    $divi_version = function_exists('et_get_theme_version')
+        ? et_get_theme_version()
+        : wp_get_theme('Divi')->get('Version');
+
+    // Divi 5+: no cargar el módulo clásico.
+    if (version_compare($divi_version, '5.0', '>=')) {
+        return;
+    }
+
+    require_once CTR_PLUGIN_PATH . 'includes/divi-module.php';
 }
 add_action('et_builder_ready', 'ctr_register_divi_module');
 

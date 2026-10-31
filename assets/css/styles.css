@@ -145,6 +145,11 @@
 /* ============================================================
    LAYOUT GRID
    ============================================================ */
+.ctr-reviews {
+    overflow: hidden;
+    width: 100%;
+}
+
 .ctr-grid {
     display: grid;
     gap: 24px;
@@ -222,11 +227,26 @@
     left: -45px;
     top: 20px;
     width: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     height: 20px;
     background-color: #00b67a;
     border-radius: 50%;
     border: 3px solid #fff;
     box-shadow: 0 0 0 2px #00b67a;
+}
+
+.ctr-timeline-date-label {
+    position: absolute;
+    left: 30px;
+    top: 4px;
+    white-space: nowrap;
+    font-size: 11px;
+    font-weight: 600;
+    color: #00b67a;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
 }
 
 .ctr-timeline-content {
@@ -244,20 +264,20 @@
    ============================================================ */
 .ctr-carousel-container {
     position: relative;
-    overflow: hidden;
     width: 100%;
     max-width: 800px;
     margin: 0 auto;
-    padding: 0 48px;
-    /* Space for side arrows */
     box-sizing: border-box;
 }
 
+/* El track de slides tiene overflow hidden — las flechas quedan fuera */
 .ctr-carousel-slides {
     display: flex !important;
+    overflow: hidden;
     transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     width: 100%;
     will-change: transform;
+    border-radius: 16px;
 }
 
 .ctr-review-slide {
@@ -411,6 +431,7 @@
     align-items: center;
     gap: 12px;
     border-top: none;
+    margin-top: auto;
     padding-top: 0;
     color: #888;
     font-size: 14px;

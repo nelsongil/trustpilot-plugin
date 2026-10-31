@@ -144,11 +144,19 @@ function ctr_render_reviews_carousel($atts = array()) {
                     <div class="ctr-timeline">
                         <div class="ctr-timeline-line"></div>
                         <?php foreach ($reviews as $index => $review): ?>
+                            <?php
+                            $tl_timestamp = !empty($review['date']) ? strtotime($review['date']) : 0;
+                            $tl_date      = $tl_timestamp ? date_i18n('F Y', $tl_timestamp) : '';
+                            ?>
                             <div class="ctr-timeline-item ctr-page-item" data-ctr-item="<?php echo esc_attr($index); ?>"
                                  <?php if ($per_page > 0 && $index >= $per_page): ?>style="display:none"<?php endif; ?>>
-                                <div class="ctr-timeline-marker"></div>
+                                <div class="ctr-timeline-marker">
+                                    <?php if ($tl_date): ?>
+                                        <span class="ctr-timeline-date-label"><?php echo esc_html($tl_date); ?></span>
+                                    <?php endif; ?>
+                                </div>
                                 <div class="ctr-timeline-content">
-                                    <?php echo ctr_render_review_card($review, $show_stars, $show_dates, $clickable, $card_style, $index); ?>
+                                    <?php echo ctr_render_review_card($review, $show_stars, false, $clickable, $card_style, $index); ?>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -292,7 +300,9 @@ function ctr_render_review_content($review, $show_stars, $show_dates, $clickable
     $output .= '<strong class="ctr-author-name">' . esc_html($author_name) . '</strong>';
 
     if ($show_dates && !empty($review['date'])) {
-        $output .= '<span class="ctr-review-date">' . esc_html($review['date']) . '</span>';
+        $timestamp = strtotime($review['date']);
+        $formatted = $timestamp ? date_i18n(get_option('date_format'), $timestamp) : esc_html($review['date']);
+        $output .= '<span class="ctr-review-date">' . esc_html($formatted) . '</span>';
     }
 
     $output .= '</div></div>';
@@ -321,6 +331,10 @@ function ctr_render_stars($rating) {
 
 // Registro del shortcode
 add_shortcode('custom_trustpilot_reviews', 'ctr_render_reviews_carousel');
+
+// Alias para los bloques que Divi 5 genera al convertir el módulo clásico
+// (divi/shortcode-module con shortcodeName "ctr_trustpilot_module").
+add_shortcode('ctr_trustpilot_module', 'ctr_render_reviews_carousel');
 
 /**
  * Documentación visible en el panel de admin.
